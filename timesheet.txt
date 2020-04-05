@@ -1,6 +1,6 @@
 Anju Ito TP Timesheet
 
-Status: Logged In
+Status: Logged Out
 
 Entry | Hour |        Timestamp         | Comment
 
@@ -8,6 +8,6 @@ Entry | Hour |        Timestamp         | Comment
    2  |  0.5 | Sun Apr  5 00:45:22 2020 | PIL's Image documentation experimentation
    3  |  1   | Sun Apr  5 11:13:13 2020 | Came up with general algorithm for image mosaic creator
    4  |  2.0 | Sun Apr  5 14:10:46 2020 | Fully wrote getAverageRGB of images and most work for imageMosaicOperator
-   5  |  0   | Sun Apr  5 16:17:51 2020 | 1586117871.7553728
+   5  |  3.5 | Sun Apr  5 19:41:42 2020 | Finished prototype of image mosaic creator!!!
 ____________________
-Total Hours: 8.5
+Total Hours: 12.0

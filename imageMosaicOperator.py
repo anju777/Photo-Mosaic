@@ -40,15 +40,16 @@ def createMosaicFromImage(mainImage, sampleImages):
     sampleImages = sizeSampleImages(sampleImages, mainImage, rows, cols)
     sampleImagesRGB = getListOfRGBValues(sampleImages)
     griddedImages = gridImage(mainImage, rows, cols)
+    avgRGBMain = getAverageRGB(mainImage)
 
     for row in range(rows):
         for col in range(cols):
             avgRGB = getAverageRGB(griddedImages[row][col])
-            indexOfSampleImage = findClosestValue(avgRGB, sampleImagesRGB)
+            indexOfSampleImage = findClosestRGB(avgRGB, sampleImagesRGB)
             sampleImage = sampleImages[indexOfSampleImage]
             griddedImages[row][col] = sampleImage
 
-    result = convertGridsToOriginal(griddedImages)
+    result = convertGridsToOriginal(griddedImages, avgRGBMain)
     return result
 
 
@@ -158,32 +159,53 @@ def divideElements(L, divisor, mode='int', target=list()):
     else:
         return 'Error: Target type must be object of type list, tuple, or set'
 
-def testGetAverageRGB():
-    print('Testing getAverageRGB... ', end='')
-    assert(getAverageRGB(image1) == (172, 169, 122))
-    assert(getAverageRGB(image2) == (137, 109, 107))
-    assert(getAverageRGB(image3) == (122, 117, 68))
-    print('Passed!!')
-
 ############################################################################
 
-# Takes in target value and a list, and returns the index closest to the target
-def findClosestValue(value, inputList):
+############################# findClosestRGB ###############################
+# Takes in target RGB (tuple) and list of RGB Values (tuples), and returns 
+# the indexof the RGB value in the list closest to the target 
+def findClosestRGB(targetRGB, RGBList):
     smallestDifference = None
     closestIndex = None
-    for i in range(len(inputList)):
-        difference = abs(value - inputList[i])
-        if (smallestDifference == None or difference < smallestDifference):
-            smallestDifference = difference
+    targetRed, targetGreen, targetBlue = targetRGB
+    for i in range(len(RGBList)):
+        red, green, blue= RGBList[i]
+        redDifference = abs(targetRed - red)
+        greenDifference = abs(targetGreen - green)
+        blueDifference = abs(targetBlue - blue)
+        avgDifference = (redDifference + greenDifference + blueDifference)/3
+        if (smallestDifference == None or avgDifference < smallestDifference):
+            smallestDifference = avgDifference
             closestIndex = i
     return closestIndex
 
 # Takes in 2D list containing image objects, and returns the images put together
 # Note: all sizes of images in the griddedImages must be the same
-def convertGridsToOriginal(griddedImages):
-    rows = len(gridedImages)
+def convertGridsToOriginal(griddedImages, backgroundColor=0):
+    rows = len(griddedImages)
     cols = len(griddedImages[0])
     griddedImage = griddedImages[0][0]
+    gridWidth, gridHeight = griddedImage.size
+    resultWidth, resultHeight = gridWidth * cols, gridHeight * rows
+    result = Image.new('RGB', (resultWidth, resultHeight), backgroundColor)
+    for row in range(rows):
+        for col in range(cols):
+            griddedImage = griddedImages[row][col]
+            x1, y1 = gridWidth * col, gridHeight * row
+            x2, y2 = x1 + griddedImage.width, y1 + griddedImage.height
+            result.paste(griddedImage, (x1, y1, x2, y2))
+    return result
+
+##########################################################################
+
+########################## Test Functions ################################
+def testGetAverageRGB():
+    print('Testing getAverageRGB...', end='')
+    assert(getAverageRGB(image1) == (172, 169, 122))
+    assert(getAverageRGB(image2) == (137, 109, 107))
+    assert(getAverageRGB(image3) == (122, 117, 68))
+    print('Passed!!')
+##########################################################################
 
 def main():
     testGetAverageRGB()

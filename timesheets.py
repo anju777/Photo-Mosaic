@@ -5,7 +5,7 @@ import time
 # By including timesheet(numberHour, comment), can log time that worked on
 # like TP!
 def timesheet(comment='', numberHour=0):
-    path = 'c:/Users/anjua/Documents/15-112/TermProjectExperiment/timesheet.txt'
+    path = 'C:\\Users\\anjua\\OneDrive\\Desktop\\Photo-Mosaic\\timesheet.txt'
     csvTimesheet = readTimesheet(path)
 
     linedRow = '_' * 50
