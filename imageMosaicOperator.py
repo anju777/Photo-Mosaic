@@ -21,34 +21,6 @@ image2 = Image.open(imgPath)
 fileName = "Nature"
 imgPath = f"C:\\Users\\anjua\\OneDrive\\Pictures\\15112_TP\\{fileName}.jpg"
 image3 = Image.open(imgPath)
-
-fileName = "IMG_1709.jpg"
-image = Image.open(f"D:\\Pictures\\{fileName}")
-
-pathLocations = ["D:\\Pictures\\", "D:\\Family\\Aya\\", 
-    "D:\\Family\\Sab Birthday Folder copy\\2008\\", 
-    "D:\\Family\\Sab Birthday Folder copy\\2009\\",
-    "D:\\Family\\Sab Birthday Folder copy\\2010\\",
-    "D:\\Family\\Sab Birthday Folder copy\\2011\\"]
-sampleImages = []
-for i in range(len(pathLocations)):
-    dirImages = os.listdir(pathLocations[i])
-    j = 0
-    while (j < len(dirImages)):
-        text = dirImages[j]
-        if (not isinstance(text, str)):
-            dirImages.pop(j)
-            continue
-        if (not text.lower().endswith('jpg') and not text.lower().endswith('png')):
-            dirImages.pop(j)
-            continue
-        if (text.startswith('.')):
-            dirImages.pop(j)
-            continue
-        imgPath = pathLocations[i] + text
-        dirImages[j] = Image.open(imgPath)
-        j += 1
-    sampleImages += dirImages
 #############################################################################
 
 
