@@ -22,20 +22,40 @@ fileName = "Nature"
 imgPath = f"C:\\Users\\anjua\\OneDrive\\Pictures\\15112_TP\\{fileName}.jpg"
 image3 = Image.open(imgPath)
 
-sampleImages = os.listdir("C:\\Users\\anjua\\OneDrive\\Pictures\\15112_TP\\")
-for i in range(len(sampleImages)):
-    text = sampleImages[i]
-    imgPath = f"C:\\Users\\anjua\\OneDrive\\Pictures\\15112_TP\\{text}"
-    sampleImages[i] = Image.open(imgPath)
+fileName = "IMG_1709.jpg"
+image = Image.open(f"D:\\Pictures\\{fileName}")
+
+pathLocations = ["D:\\Pictures\\", "D:\\Family\\Aya\\", 
+    "D:\\Family\\Sab Birthday Folder copy\\2008\\", 
+    "D:\\Family\\Sab Birthday Folder copy\\2009\\",
+    "D:\\Family\\Sab Birthday Folder copy\\2010\\",
+    "D:\\Family\\Sab Birthday Folder copy\\2011\\"]
+sampleImages = []
+for i in range(len(pathLocations)):
+    dirImages = os.listdir(pathLocations[i])
+    j = 0
+    while (j < len(dirImages)):
+        text = dirImages[j]
+        if (not isinstance(text, str)):
+            dirImages.pop(j)
+            continue
+        if (not text.lower().endswith('jpg') and not text.lower().endswith('png')):
+            dirImages.pop(j)
+            continue
+        if (text.startswith('.')):
+            dirImages.pop(j)
+            continue
+        imgPath = pathLocations[i] + text
+        dirImages[j] = Image.open(imgPath)
+        j += 1
+    sampleImages += dirImages
 #############################################################################
 
 
 ############################ MAIN FUNCTION #########################
 # Takes in an image object, and returns the image mosaic
-def createMosaicFromImage(mainImage, sampleImages):
-    'Replace later with rows/columns obtainer '
-    rows =  50
-    cols = 25
+def imageMosaicCreator(mainImage, sampleImages):
+    rows, cols = obtainRowsCols(mainImage)
 
     sampleImages = sizeSampleImages(sampleImages, mainImage, rows, cols)
     sampleImagesRGB = getListOfRGBValues(sampleImages)
@@ -51,8 +71,17 @@ def createMosaicFromImage(mainImage, sampleImages):
 
     result = convertGridsToOriginal(griddedImages, avgRGBMain)
     return result
+#########################################################################
 
-
+# Takes in image and ratio (default = 4:3), and returns rows/cols that would
+# be optimal to split the image into
+def obtainRowsCols(image, ratio=(4, 3), minLength=20):
+    base = min(ratio)
+    multiplier = minLength / base
+    ratio = multiplyElement(ratio, multiplier)
+    rows = int(image.height / ratio[1])
+    cols = int(image.width / ratio[0])
+    return rows, cols
 
 ########################## sizeSampleImages ##############################
 # Takes in list of images and returns the same list of images, but sized to 
@@ -76,7 +105,6 @@ def sizeImage(image, mainImage, rows, cols):
     image = image.resize((gridWidth, gridHeight), 3, 
             (0, 0, targetWidth, targetHeight))
     return image
-
 ############################################################################
 
 # Takes in list of images and returns list (same len) of tuples containing RGB
@@ -117,7 +145,7 @@ def getAverageRGB(image):
             avgRGB[i] += (RGBValue[i]*count)
     # Divides each element by total number of pixels to obtain average
     pixelCount = image.width * image.height
-    avgRGB = divideElements(avgRGB, pixelCount, 'int', tuple())
+    avgRGB = divideElement(avgRGB, pixelCount, 'int', tuple())
     return avgRGB 
 
 # Takes in colorCount (list of tuples (count, paletteNumber)) & palette (list
@@ -133,11 +161,35 @@ def combineListAndPalette(colorList, colorPalette):
         colorList[i] = (count, RGBTuple)        
     return colorList
 
+# Takes in set/list/tuple and returns with each element multiplied by multiplier
+#   Default return type is lists and normal multipliacation, but can specify
+#   Mode: can return elements consisting of 'int' or 'float' (regular)
+#   Target: Returns result in indicated object format (list, set, or tuples)
+def multiplyElement(L, multiplier, mode='float', target=list()):
+    mode = mode.lower()
+    if (mode != 'int' and mode != 'floor' and mode != 'float'):
+        return 'Mode only takes in "int" or "float"'
+    result = []
+    for elem in L:
+        if (mode == 'int'):
+            product = int(elem * multiplier)
+        elif (mode == 'float'):
+            product = elem * multiplier 
+        result.append(product)
+    if isinstance(target, list):
+        return result
+    elif isinstance(target, tuple):
+        return tuple(result)
+    elif isinstance(target, set):
+        return set(result)
+    else:
+        return 'Error: Target type must be object of type list, tuple, or set'
+
 # Takes in element and returns element with each element divided by divisor
 #   Default return type is lists and integer divides, but can also specify
 #   Mode: can integer divide ('int'), floor divide ('floor'), or 'float' divide
 #   Target: Returns result in indicated object format (list, set, or tuples)
-def divideElements(L, divisor, mode='int', target=list()):
+def divideElement(L, divisor, mode='int', target=list()):
     mode = mode.lower()
     if (mode != 'int' and mode != 'floor' and mode != 'float'):
         return 'Mode only takes in "int", "floor", or "float"'
@@ -158,7 +210,6 @@ def divideElements(L, divisor, mode='int', target=list()):
         return set(result)
     else:
         return 'Error: Target type must be object of type list, tuple, or set'
-
 ############################################################################
 
 ############################# findClosestRGB ###############################
@@ -195,7 +246,6 @@ def convertGridsToOriginal(griddedImages, backgroundColor=0):
             x2, y2 = x1 + griddedImage.width, y1 + griddedImage.height
             result.paste(griddedImage, (x1, y1, x2, y2))
     return result
-
 ##########################################################################
 
 ########################## Test Functions ################################
