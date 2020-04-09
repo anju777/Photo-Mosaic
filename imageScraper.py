@@ -27,37 +27,39 @@ def retrieveHtmlFromGoogleImage(keyword):
         elem.send_keys(keyword)
         elem.send_keys(Keys.RETURN)
         time.sleep(0.1)
-        # Scrolls down the page to obtain HTML code with more images loaded
-        for i in range(35):
-            start = i*1080
-            # Citation: modified code from below URL for driver.execute_script
-            # https://www.edureka.co/community/4578/possible-scroll-webpage-selenium-webdriver-programmed-python
-            driver.execute_script(f"window.scrollTo({start},{start + 1080});") 
-            time.sleep(0.05)
+        # Scrolls down so that more image is loaded for use
+        endLocation = scrollDown(driver)
+        time.sleep(0.5)
+        # Returns list of length 1
+        loadMoreButton = driver.find_elements_by_class_name('mye4qd')
+        loadMoreButton[0].click()
+        time.sleep(0.1)
+        scrollDown(driver, endLocation)
         html = driver.page_source
-        '''url = driver.current_url'''
         return html
 
-'''
-def getHtmlOfUrls(urls):
-    htmlList = []
-    for url in urls:
-        request = requests.get(url)
-        html = bs.BeautifulSoup(request.content, 'html.parser')
-        htmlList.append(html)
-    return htmlList
-'''
+# Run on selenium browser and scrolls page fully scrolled down n times
+def scrollDown(driver, startOffset=0, n=35, webSize=1080):
+    for i in range(n):
+        start = i*webSize + startOffset
+        # Citation: modified code from below URL for driver.execute_script
+        # https://www.edureka.co/community/4578/possible-scroll-webpage-selenium-webdriver-programmed-python
+        driver.execute_script(f"window.scrollTo({start},{start + webSize});") 
+        time.sleep(0.1)
+    return start + webSize
 
+# Takes in html link and takes out all the image links inside
 def retrieveImageUrls(html):
     imageUrls = []
     html = bs.BeautifulSoup(html, 'lxml')
     for imageTag in html.find_all('img'):
         imageLink = imageTag.get('src')
         if (imageLink and imageLink.startswith('http')): 
-            # not empty string and not Google's stored image
+            # not empty string and not one of Google's stored image
             imageUrls.append(imageLink)
     return imageUrls
 
+# Takes in a list of imageLinks and returns new list with Image objects of url
 def convertUrlsToImages(imageUrls):
     imageList = []
     for imageUrl in imageUrls:

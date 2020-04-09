@@ -1,13 +1,14 @@
 # Name: Anju Ito 
 # Term Project 15-112: Photo Mosaic
 
-# This module contains functions that performs most operations to the image,
+# This module contains functions that performs most operations on the image,
 # Including the creation of photo mosaics, etc.
 
 from cmu_112_graphics import *
 from PIL import Image, ImageColor
 import os
 from imageScraper import keywordImageRetriever
+
 
 ####################### Sample Images (Remove Later) ########################
 fileName = "Nagahama_Neru"
@@ -22,7 +23,6 @@ fileName = "Nature"
 imgPath = f"C:\\Users\\anjua\\OneDrive\\Pictures\\15112_TP\\{fileName}.jpg"
 image3 = Image.open(imgPath)
 #############################################################################
-
 
 ############################ MAIN FUNCTION #########################
 # Takes in an image object, and returns the image mosaic
@@ -42,7 +42,7 @@ def imageMosaicCreator(mainImage, sampleImages):
 
     result = convertGridsToOriginal(griddedImages, avgRGBMain)
     return result
-#########################################################################
+###########################################################################
 
 # Takes in image and ratio (default = 4:3), and returns rows/cols that would
 # be optimal to split the image into
@@ -232,11 +232,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-'''
-size sample image with image.crop()
-grid.paste(sampleImage, box)
-image3 = image3.quantize(256)
-colorList = image3.getcolors()
-image3.show('title')
-image3.close()
-'''
