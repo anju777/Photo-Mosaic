@@ -7,7 +7,7 @@
 from cmu_112_graphics import *
 from PIL import Image, ImageColor
 import os
-import timesheets
+from imageScraper import keywordImageRetriever
 
 ####################### Sample Images (Remove Later) ########################
 fileName = "Nagahama_Neru"
@@ -28,7 +28,6 @@ image3 = Image.open(imgPath)
 # Takes in an image object, and returns the image mosaic
 def imageMosaicCreator(mainImage, sampleImages):
     rows, cols = obtainRowsCols(mainImage)
-
     sampleImages = sizeSampleImages(sampleImages, mainImage, rows, cols)
     sampleImagesRGB = getListOfRGBValues(sampleImages)
     griddedImages = gridImage(mainImage, rows, cols)
@@ -120,9 +119,8 @@ def getAverageRGB(image):
     avgRGB = divideElement(avgRGB, pixelCount, 'int', tuple())
     return avgRGB 
 
-# Takes in colorCount (list of tuples (count, paletteNumber)) & palette (list
-# of RGB values (not separated by tuples, etc.)). 
-# Returns new list in the format(count, (RGB Value))
+# Takes in colorCount (list of (count, paletteNumber)) & palette (list of RGB 
+# values without categorization. Returns new list as (count, (RGB Value))
 def combineListAndPalette(colorList, colorPalette):
     for i in range(len(colorList)):
         count = colorList[i][0]
