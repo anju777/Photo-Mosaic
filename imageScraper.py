@@ -10,6 +10,12 @@ from selenium.webdriver import Chrome
 
 # Inputs keyword that you want to look up, and returns list of sample images
 # containing at least n pictures 
+
+# CMU Graphics/Advanced tkinter
+# Modes: Modal 2/7
+# Advanced tkinter -> faster options for creating objects
+'''##### Different colors -> options with Selenium'''
+
 def keywordImageRetriever(keyword, n=300):
     html = retrieveHtmlFromGoogleImage(keyword)
     imageUrls = retrieveImageUrls(html)
@@ -63,9 +69,12 @@ def retrieveImageUrls(html):
 def convertUrlsToImages(imageUrls):
     imageList = []
     for imageUrl in imageUrls:
-        # Citation: Below 2 lines taken from loadImage() of cmu_112_graphics.py
-        # Downloaded from: https://www.cs.cmu.edu/~112/notes/cmu_112_graphics.py
-        response = requests.request('GET', imageUrl)
-        image = Image.open(BytesIO(response.content))
+        image = convertUrlToImage(imageUrl)
         imageList.append(image)
     return imageList
+
+def convertUrlToImage(imageUrl):
+    # Citation: Below 2 lines taken from loadImage() of cmu_112_graphics.py
+    # Downloaded from: https://www.cs.cmu.edu/~112/notes/cmu_112_graphics.py
+    response = requests.request('GET', imageUrl)
+    return Image.open(BytesIO(response.content))

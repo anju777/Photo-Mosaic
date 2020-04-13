@@ -6,9 +6,8 @@
 
 from cmu_112_graphics import *
 from PIL import Image, ImageColor
-import os
-from imageScraper import keywordImageRetriever
-
+from imageScraper import keywordImageRetriever, convertUrlToImage
+from io import BytesIO
 
 ####################### Sample Images (Remove Later) ########################
 fileName = "Nagahama_Neru"
@@ -24,9 +23,18 @@ imgPath = f"C:\\Users\\anjua\\OneDrive\\Pictures\\15112_TP\\{fileName}.jpg"
 image3 = Image.open(imgPath)
 #############################################################################
 
-############################ MAIN FUNCTION #########################
+def keywordMosaicCreator(mainImage, keyword):
+    sampleImages = keywordImageRetriever(keyword)
+    mosaic = imageMosaicCreator(mainImage, sampleImages)
+    mosaic.show()
+    return mosaic
+
+############################### MAIN FUNCTION ###############################
 # Takes in an image object, and returns the image mosaic
 def imageMosaicCreator(mainImage, sampleImages):
+    # Allows function to take in imageUrl as mainImage as well
+    if (isinstance(mainImage, str) and mainImage.startswith('http')):
+        mainImage = convertUrlToImage(mainImage)
     rows, cols = obtainRowsCols(mainImage)
     sampleImages = sizeSampleImages(sampleImages, mainImage, rows, cols)
     sampleImagesRGB = getListOfRGBValues(sampleImages)
@@ -42,7 +50,7 @@ def imageMosaicCreator(mainImage, sampleImages):
 
     result = convertGridsToOriginal(griddedImages, avgRGBMain)
     return result
-###########################################################################
+#############################################################################
 
 # Takes in image and ratio (default = 4:3), and returns rows/cols that would
 # be optimal to split the image into
@@ -54,7 +62,7 @@ def obtainRowsCols(image, ratio=(4, 3), minLength=20):
     cols = int(image.width / ratio[0])
     return rows, cols
 
-########################## sizeSampleImages ##############################
+############################# sizeSampleImages ##############################
 # Takes in list of images and returns the same list of images, but sized to 
 # match the size of each grid if the mainImage was cut up in indicated rows/cols
 def sizeSampleImages(sampleImages, mainImage, rows, cols):
@@ -76,7 +84,7 @@ def sizeImage(image, mainImage, rows, cols):
     image = image.resize((gridWidth, gridHeight), 3, 
             (0, 0, targetWidth, targetHeight))
     return image
-############################################################################
+#############################################################################
 
 # Takes in list of images and returns list (same len) of tuples containing RGB
 # values of each elements
@@ -100,7 +108,7 @@ def gridImage(image, rows, cols):
             result[row].append(grid)
     return result
 
-########################## getAverageRGB #################################
+############################# getAverageRGB #################################
 # Takes in an image object and returns a tuple of the average RGB of the image
 def getAverageRGB(image):
     # Modifies image so that it can be represented with 256 colors
@@ -216,19 +224,20 @@ def convertGridsToOriginal(griddedImages, backgroundColor=0):
             x2, y2 = x1 + griddedImage.width, y1 + griddedImage.height
             result.paste(griddedImage, (x1, y1, x2, y2))
     return result
-##########################################################################
+############################################################################
 
-########################## Test Functions ################################
+'''
+############################ Test Functions ################################
 def testGetAverageRGB():
     print('Testing getAverageRGB...', end='')
     assert(getAverageRGB(image1) == (172, 169, 122))
     assert(getAverageRGB(image2) == (137, 109, 107))
     assert(getAverageRGB(image3) == (122, 117, 68))
     print('Passed!!')
-##########################################################################
+############################################################################
 
 def main():
     testGetAverageRGB()
 
 if __name__ == '__main__':
-    main()
+    main()'''
