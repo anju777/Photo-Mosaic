@@ -26,7 +26,7 @@ def keywordImageRetriever(keyword, n=300):
 def retrieveHtmlFromGoogleImage(keyword):
     chromeDriverPath = 'C:\\Users\\anjua\\AppData\\Local\\Programs\\Python\\Python37\\Lib\\chromedriver_win32\\chromedriver.exe'
     with Chrome(chromeDriverPath) as driver:
-        '''driver.minimize_window()'''
+        #driver.minimize_window()
         driver.get('http://image.google.com')
         assert 'Google Images' in driver.title
         elem = driver.find_element_by_name('q')
@@ -39,19 +39,19 @@ def retrieveHtmlFromGoogleImage(keyword):
         # Returns list of length 1
         loadMoreButton = driver.find_elements_by_class_name('mye4qd')
         loadMoreButton[0].click()
-        time.sleep(0.1)
+        time.sleep(0.2)
         scrollDown(driver, endLocation)
         html = driver.page_source
         return html
 
 # Run on selenium browser and scrolls page fully scrolled down n times
-def scrollDown(driver, startOffset=0, n=35, webSize=1080):
+def scrollDown(driver, startOffset=0, n=40, webSize=1080):
     for i in range(n):
         start = i*webSize + startOffset
         # Citation: modified code from below URL for driver.execute_script
         # https://www.edureka.co/community/4578/possible-scroll-webpage-selenium-webdriver-programmed-python
         driver.execute_script(f"window.scrollTo({start},{start + webSize});") 
-        time.sleep(0.1)
+        time.sleep(0.15)
     return start + webSize
 
 # Takes in html link and takes out all the image links inside

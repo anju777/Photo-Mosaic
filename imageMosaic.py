@@ -3,6 +3,7 @@
 
 from cmu_112_graphics import *
 from imageScraper import keywordImageRetriever, convertUrlToImage
+from imageMosaicOperator import imageMosaicCreator
 
 '''ToDo:
 - Design Title Image Text
@@ -20,7 +21,7 @@ class TitleMode(Mode):
         mode.backgroundImage = convertUrlToImage(backgroundImageUrl)
         mode.buttonHeight = mode.height * 4/5
         mode.buttons = mode.app.createButtonsWithFixedY(mode, mode.optionsText, 
-            mode.optionsDestination, mode.buttonHeight, 20, 100, 'rectangle', 'white')
+            mode.optionsDestination, mode.buttonHeight, 40, 200, 'rectangle', 'white')
 
     def mousePressed(mode, event):
         for button in mode.buttons:
@@ -43,45 +44,167 @@ class HelpMode(Mode):
     def appStarted(mode):
         mode.backgroundColor = 'Light Pink'
         mode.borderColor = 'Cyan'
-        mode.space = mode.width * 1/5
+        mode.space = 0
         mode.margin = 30
-        mode.text = '''Welcomee to the Photo Mosaic Creator!
-Here, you can create photo mosaics based on keyword input or by importing your own images and videos.
+        mode.font = 'Arial 12'
+        mode.text = '''Welcome to the Photo Mosaic Creator!\n\n
+Here you can create photo mosaics based on keyword input or by importing your own images and videos.
 The basic features and their descriptions are listed below. Enjoy!
 
 - Keyword Feature: Takes in keyword and imports images from the Internet to use.
 - Import: Can import files from your computer to create your customized photo mosaics!
+\n\n\n\n\n
+\t\t\t\tPress any key to go back.
 '''
 
     def keyPressed(mode, event):
         mode.app.setActiveMode(mode.app.previousMode)
 
     def redrawAll(mode, canvas):
-        mode.app.previousMode
         canvas.create_rectangle(mode.space, 0, mode.width-mode.space, 
             mode.height, fill=mode.borderColor)
         canvas.create_rectangle(mode.space+mode.margin, mode.margin, 
             mode.width-mode.space-mode.margin, mode.height-mode.margin, 
             fill=mode.backgroundColor)
+        canvas.create_text(mode.width//2, mode.height//2, text=mode.text, font=mode.font)
 
 class SelectionMode(Mode):
+    def appStarted(mode):
+        mode.titleText = 'Selection'
+        backgroundImageUrl = 'https://previews.123rf.com/images/mycteria/mycteria1512/mycteria151200044/49529679-abstract-frozen-background-of-ice.jpg'
+        mode.backgroundImage = convertUrlToImage(backgroundImageUrl)
+        mode.createButtons()
+
+    def createButtons(mode):
+        buttonY = mode.height * 2/3
+        marginSpace = 100
+        buttonR = 100
+        buttonShape = 'ellipse'
+        buttonColor = 'white'
+        buttonFont = 'Arial 20 bold'
+        videoButton = Button(marginSpace, buttonY-buttonR, marginSpace+(buttonR*2), 
+            buttonY+buttonR, 'Video', mode.app.ImportVideoSamplesMode,
+            buttonShape, buttonColor, buttonFont)
+        photoMosaicButton = Button(mode.width-marginSpace-buttonR*2, buttonY-buttonR, 
+            mode.width-marginSpace, buttonY+buttonR, 'Photo Mosaic\n      Creator',
+            mode.app.ImportSamplesMode, buttonShape, buttonColor, buttonFont)
+        mode.buttons = [videoButton, photoMosaicButton]
+
+    def mousePressed(mode, event):
+        for button in mode.buttons:
+            buttonClicked = button.isClicked(event.x, event.y)
+            if (buttonClicked):
+                nextMode = buttonClicked
+                mode.app.previousMode = mode.app.TitleMode
+                mode.app.setActiveMode(nextMode)
+
+    def redrawAll(mode, canvas):
+        font = 'Arial 40 bold'
+        cx = mode.width//2
+        cy = mode.height//2
+        titley = mode.height*1/3
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.backgroundImage))
+        canvas.create_text(cx, titley, text=mode.titleText, font=font, fill='Navy')
+        for button in mode.buttons:
+            mode.app.drawButton(mode, button, canvas)
+
+class ImportSamplesMode(Mode):
+    def appStarted(mode):
+        mode.input = ''
+        mode.createButtons()
+        backgroundImageUrl = 'https://static.independent.co.uk/s3fs-public/thumbnails/image/2019/03/22/16/istock-644053990.jpg?w968h681'
+        mode.backgroundImage = convertUrlToImage(backgroundImageUrl)
+        mode.keywordBar = False
+        mode.sampleImages = None
+        mode.counter = 1
+
+    def createButtons(mode):
+        keywordMargin = 150
+        mode.keywordY = mode.height*0.4
+        keywordHeight = 40
+        keywordButton = Button(keywordMargin, mode.keywordY-(keywordHeight//2), 
+            mode.width-keywordMargin, mode.keywordY+(keywordHeight//2))
+        importWidth = 150
+        importHeight = 40
+        importY = mode.height*0.7
+        importButton = Button((mode.width//2)-(importWidth//2), importY-(importHeight//2),
+            (mode.width//2)+(importWidth//2), importY+(importHeight//2), 'Import')
+        nextWidth = 120
+        nextButton = Button(mode.width*0.7, mode.height*0.8, mode.width*0.7+nextWidth,
+            mode.height*0.8+40, 'Next', mode.app.ImportMainMode)
+        mode.buttons = [keywordButton, importButton, nextButton]
+
+    def mousePressed(mode, event):
+        for button in mode.buttons:
+            nextMode = button.isClicked(event.x, event.y)
+            if (nextMode):
+                if (button.content == ''):
+                    mode.keywordBar = True
+                elif (button.content == 'Import'):
+                    mode.app.getUserInput('Choose Sample Image File')
+                elif (button.content == 'Next'):
+                    if (mode.app.sampleImages):
+                        mode.app.setActiveMode(nextMode)
+                    else:
+                        mode.app.showMessage('Please import sample images first')
+
+    def keyPressed(mode, event):
+        if (mode.keywordBar):
+            if (event.key == 'Space'):
+                mode.input += ' '
+            elif (event.key == 'Backspace'):
+                mode.input = mode.input[:-1]
+            elif (event.key == 'Enter'):
+                mode.app.sampleImages = keywordImageRetriever(mode.input)
+            else:
+                mode.input += event.key
+
+    def drawInput(mode, canvas):
+        font = 'Arial 20 bold'
+        mode.counter += 1
+        if (mode.keywordBar and mode.input == '' and mode.counter%22 < 11):
+            canvas.create_text(mode.width//2, mode.keywordY, text='|', fill='Black', font=font)
+        else:
+            canvas.create_text(mode.width//2, mode.keywordY, text=mode.input, fill='Black', font=font)
+
+    def redrawAll(mode, canvas):
+        cx = mode.width//2
+        cy = mode.height//2
+        font='Arial 20 bold'
+        fontColor = 'white'
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.backgroundImage))
+        canvas.create_text(cx, mode.height*0.1, text='Sample Images', fill=fontColor, font=font)
+        canvas.create_text(cx, mode.height*0.3, text='Import with Keyword!\n(Press Enter to Search)', fill=fontColor, font=font)
+        for button in mode.buttons:
+            mode.app.drawButton(mode, button, canvas)
+        mode.drawInput(canvas)
+        canvas.create_text(cx, mode.height*0.6, text='Or Import from Computer!', fill=fontColor, font=font)
+
+class ImportVideoSamplesMode(ImportSamplesMode):
     pass
 
+class ImportMainMode(Mode):
+    def appStarted(mode):
+        mode.mainImage = 'https://static.independent.co.uk/s3fs-public/thumbnails/image/2019/03/22/16/istock-644053990.jpg?w968h681'
+        mode.mainImage = convertUrlToImage(mode.mainImage)
+        mode.mosaic = imageMosaicCreator(mode.mainImage, mode.app.sampleImages)
+    
+    def redrawAll(mode, canvas):
+        cx = mode.width//2
+        cy = mode.height//2
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.mosaic))
+        
 '''
-class ImportSamplesMode(mode):
+class LoadingMode(Mode):
 
-class ImportMainMode(mode):
-
-class LoadingMode(mode):
-
-class DisplayMode(mode):
+class DisplayMode(Mode):
 '''
 
 
 class Button(object):
-    def __init__(self, x1, y1, x2, y2, content, targetMode, buttonType='rectangle', 
-            color='white', font='Arial 20 bold'):
-        typeOptions = {'rectangle', 'ellipse', 'hexagon', 'circle', 'rounded rectangle'}
+    def __init__(self, x1, y1, x2, y2, content='', targetMode=True, buttonType='rectangle', 
+            color='white', font='Arial 20 bold', fill='black'):
+        typeOptions = {'rectangle', 'ellipse', 'hexagon', 'rounded rectangle'}
         self.x1 = x1
         self.y1 = y1
         self.x2 = x2
@@ -91,6 +214,7 @@ class Button(object):
         self.type = buttonType
         self.color = color
         self.font = font
+        self.fill = fill
         self.rx = (x2 - x1)//2
         self.ry = (y2 - y1)//2
         self.cx = x1 + self.rx
@@ -101,8 +225,8 @@ class Button(object):
             if (self.x1 < x and x < self.x2 and self.y1 < y and y < self.y2):
                 return self.targetMode
             else: return None
-        elif (self.type == 'ellipse'):
-            if ((x**2//self.rx**2 + y**2//self.ry**2) < 1):
+        elif (self.type == 'ellipse'): # only works for circles
+            if (((self.cx-x)**2  + (self.cy-y)**2)**0.5 < self.rx):
                 return self.targetMode
             else: return None
         '''
@@ -120,35 +244,49 @@ class PhotoMosaicApp(ModalApp):
         app.TitleMode = TitleMode()
         app.HelpMode = HelpMode()
         app.SelectionMode = SelectionMode()
+        app.ImportSamplesMode = ImportSamplesMode()
+        app.ImportVideoSamplesMode = ImportVideoSamplesMode()
+        app.ImportMainMode = ImportMainMode()
+        app.sampleImages = None
         app.setActiveMode(app.TitleMode)
 
     @staticmethod
     def drawButton(app, button, canvas):    # button is of object Button
         if (button.type == 'ellipse'):
-            canvas.create_ellipse(button.x1, button.y1, button.x2, 
+            canvas.create_oval(button.x1, button.y1, button.x2, 
                 button.y2, fill=button.color)
             if (isinstance(button.content, str)):
                 canvas.create_text(button.cx, button.cy, text=button.content,
-                    font=button.font)
+                    font=button.font, fill=button.fill)
             '''Add Image option too'''
         elif (button.type == 'rectangle'):
             canvas.create_rectangle(button.x1, button.y1, button.x2, 
                 button.y2, fill=button.color)
             if (isinstance(button.content, str)):
                 canvas.create_text(button.cx, button.cy, text=button.content,
-                    font=button.font)
+                    font=button.font, fill=button.fill)
 
     # Takes in dictionary of buttons
     @staticmethod
-    def createButtonsWithFixedY(app, buttonTexts, buttonDestinations, y, height=40, width=100, shape='rectangle', color='white'):
+    def createButtonsWithFixedY(app, buttonTexts, buttonDestinations, y, height=80, width=200, shape='rectangle', color='white'):
         cellWidth = app.width//(1 + len(buttonTexts))
         result = []
         for i in range(len(buttonTexts)):
-            button = Button(cellWidth*(i+1)-width, y-height, cellWidth*(i+1)+width, y+height,
-                    buttonTexts[i], buttonDestinations[i], shape, color)
+            button = Button(cellWidth*(i+1)-(width//2), y-(height//2), cellWidth*(i+1)+(width//2), 
+            y+(height//2), buttonTexts[i], buttonDestinations[i], shape, color)
             result.append(button)
         return result
-
+    ''' Don't really use right now
+    @staticmethod
+    def createButtonsWithFixedX(app, buttonTexts, buttonDestinations, x, yStart, yEnd, height=80, width=100, shape='rectangle', color='white'):
+        cellHeight = ((yEnd-yStart)//(1 + len(buttonTexts)))
+        result = []
+        for i in range(len(buttonTexts)):
+            button = Button(x-(width//2), yStart+cellHeight*(i+1)-(height//2), x+(width//2),
+                yStart+cellHeight*(i+1)+(height//2), buttonTexts[i], buttonDestinations[i], shape, color)
+            result.append(button)
+        return result
+    '''
 def run(width=800, height=600):
     app = PhotoMosaicApp(width=width, height=height)
 
