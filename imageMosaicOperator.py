@@ -225,19 +225,3 @@ def convertGridsToOriginal(griddedImages, backgroundColor=0):
             result.paste(griddedImage, (x1, y1, x2, y2))
     return result
 ############################################################################
-
-'''
-############################ Test Functions ################################
-def testGetAverageRGB():
-    print('Testing getAverageRGB...', end='')
-    assert(getAverageRGB(image1) == (172, 169, 122))
-    assert(getAverageRGB(image2) == (137, 109, 107))
-    assert(getAverageRGB(image3) == (122, 117, 68))
-    print('Passed!!')
-############################################################################
-
-def main():
-    testGetAverageRGB()
-
-if __name__ == '__main__':
-    main()'''

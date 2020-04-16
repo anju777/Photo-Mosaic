@@ -7,7 +7,7 @@ from imageMosaicOperator import imageMosaicCreator
 
 '''ToDo:
 - Design Title Image Text
-- Create background image (idea: 112-related background: logo/Prof. Kosbie)
+- Create background image (idea: photo mosaic)
 - Figure out title text alignment (multi-line center option for help, etc.)
 - Different modes and versions with similarities -> OOP (subclass)
 '''
@@ -16,7 +16,7 @@ class TitleMode(Mode):
     def appStarted(mode):
         mode.titleText = 'PHOTO MOSAIC\nCREATOR'
         mode.optionsText = ['Create', 'Help']
-        mode.optionsDestination = [mode.app.SelectionMode, mode.app.HelpMode]
+        mode.optionsDestination = [mode.app.ImportSamplesMode, mode.app.HelpMode]
         backgroundImageUrl = 'https://static.independent.co.uk/s3fs-public/thumbnails/image/2019/03/22/16/istock-644053990.jpg?w968h681'
         mode.backgroundImage = convertUrlToImage(backgroundImageUrl)
         mode.buttonHeight = mode.height * 4/5
@@ -119,11 +119,11 @@ class ImportSamplesMode(Mode):
         mode.counter = 1
 
     def createButtons(mode):
-        keywordMargin = 150
+        mode.keywordMargin = 150
         mode.keywordY = mode.height*0.4
         keywordHeight = 40
-        keywordButton = Button(keywordMargin, mode.keywordY-(keywordHeight//2), 
-            mode.width-keywordMargin, mode.keywordY+(keywordHeight//2))
+        keywordButton = Button(mode.keywordMargin, mode.keywordY-(keywordHeight//2), 
+            mode.width-mode.keywordMargin, mode.keywordY+(keywordHeight//2))
         importWidth = 150
         importHeight = 40
         importY = mode.height*0.7
@@ -156,16 +156,18 @@ class ImportSamplesMode(Mode):
                 mode.input = mode.input[:-1]
             elif (event.key == 'Enter'):
                 mode.app.sampleImages = keywordImageRetriever(mode.input)
-            else:
+            elif (len(event.key) == 1):
                 mode.input += event.key
 
     def drawInput(mode, canvas):
         font = 'Arial 20 bold'
         mode.counter += 1
-        if (mode.keywordBar and mode.input == '' and mode.counter%22 < 11):
-            canvas.create_text(mode.width//2, mode.keywordY, text='|', fill='Black', font=font)
-        else:
-            canvas.create_text(mode.width//2, mode.keywordY, text=mode.input, fill='Black', font=font)
+        blinkTime = 20
+        inputX = mode.keywordMargin + 10
+        if (mode.keywordBar and mode.counter%blinkTime < blinkTime//2):
+            canvas.create_text(inputX, mode.keywordY, text=(mode.input + '|'), 
+                anchor='w', fill='Black', font=font)
+        canvas.create_text(inputX, mode.keywordY, text=mode.input, anchor='w', fill='Black', font=font)
 
     def redrawAll(mode, canvas):
         cx = mode.width//2
