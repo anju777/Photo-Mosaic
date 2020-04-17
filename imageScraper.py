@@ -1,6 +1,6 @@
 # Name: Anju Ito
 
-import requests, time
+import requests, time, os
 import bs4 as bs
 from PIL import Image
 from io import BytesIO
@@ -13,9 +13,15 @@ from selenium.webdriver import Chrome
 
 ############################## MAIN FUNCTIONS #################################
 def keywordImageRetriever(keyword, n=300):
+    path = f'C:/Users/anjua/OneDrive/Desktop/Photo-Mosaic/SampleImages/{keyword}'
+    if (os.path.exists(path) and ((len(os.listdir(path)) + 50) > n)):
+        imageList = retrieveImagesFromFile(path)
+        return imageList
     htmlList = retrieveHtmlsFromGoogleImage(keyword)
     imageUrls = retrieveImageUrlsFromList(htmlList)
     imageList = convertUrlsToImages(imageUrls)
+    imageList.pop(0)
+    saveImageList(imageList, path)
     return imageList
 ##############################################################################
 
@@ -34,10 +40,10 @@ def retrieveHtmlsFromGoogleImage(keyword):
         time.sleep(0.1)
         html = getHtmlOfGoogleImagePage(driver)
         htmlList.append(html)
-        driver.execute_script("location.reload();")
+        '''driver.execute_script("location.reload();")
         time.sleep(0.1)
         driver.find_element_by_class_name('PNyWAd.ZXJQ7c').click() # Clicks on Tool
-        time.sleep(2)
+        time.sleep(1)
         nColor = 12
         for n in range(nColor):
             driver.find_element_by_xpath("//div[@class='D0HoIc itb-h']/div[2]/div[1]/div[1]").click() # Clicks on Color Option
@@ -46,7 +52,7 @@ def retrieveHtmlsFromGoogleImage(keyword):
             else: driver.find_element_by_xpath(f"//div[@class='Ix6LGe']/div[1]/a[{n}]/div[1]/div[1]").click()
             time.sleep(0.2)
             html = getHtmlOfGoogleImagePage(driver)
-            htmlList.append(html)
+            htmlList.append(html)'''
         return htmlList
         
 # Assumes that element is already at top of Google Image page, and retrieves html
@@ -54,11 +60,11 @@ def retrieveHtmlsFromGoogleImage(keyword):
 def getHtmlOfGoogleImagePage(driver):
     # Scrolls down so that more image is loaded for use
     endLocation = scrollDown(driver)
-    time.sleep(0.1)
+    time.sleep(0.5)
     # Returns list of length 1
     loadMoreButton = driver.find_elements_by_class_name('mye4qd')
     loadMoreButton[0].click()
-    time.sleep(0.05)
+    time.sleep(0.5)
     scrollDown(driver, endLocation)
     html = driver.page_source
     return html
@@ -70,7 +76,7 @@ def scrollDown(driver, startOffset=0, n=35, webSize=1080):
         # Citation: modified code from below URL for driver.execute_script
         # https://www.edureka.co/community/4578/possible-scroll-webpage-selenium-webdriver-programmed-python
         driver.execute_script(f"window.scrollTo({start},{start + webSize});") 
-        time.sleep(0.15)
+        time.sleep(0.1)
     return start + webSize
 
 ########################### retrieveImageUrlsFromList ########################
@@ -107,4 +113,36 @@ def convertUrlToImage(imageUrl):
     # Downloaded from: https://www.cs.cmu.edu/~112/notes/cmu_112_graphics.py
     response = requests.request('GET', imageUrl)
     return Image.open(BytesIO(response.content))
+##############################################################################
+
+############################### SaveImageList ################################
+# Takes in list of PIL Images and saves it into indicated path with file format
+def saveImageList(imageList, path, fileFormat='jpg'):
+    if (not os.path.exists(path)):
+        os.mkdir(path)
+        for i in range(len(imageList)): # First image always Google
+            imageList[i] = imageList[i].convert(mode='RGB')
+            if (path.count('\\') > 0):
+                imageList[i].save(f'{path}\\image{i}.{fileFormat}')
+            else:
+                imageList[i].save(f'{path}/image{i}.{fileFormat}')
+##############################################################################
+
+########################### retrieveImagesFromFile ###########################
+def retrieveImagesFromFile(path):
+    if os.path.isfile(path):
+        if (path.lower().endswith('jpg') or path.lower().endswith('png')):
+            return [Image.open(path)]
+    else:
+        imageList = []
+        for item in os.listdir(path):
+            if (path.count('\\') > 0 and not path.endswith('\\')):
+                innerPath = f'{path}\\{item}'
+            elif (not path.endswith('/')):
+                innerPath = f'{path}/{item}'
+            else:
+                innerPath = f'{path}{item}'
+            images = retrieveImagesFromFile(innerPath)
+            imageList += images
+    return imageList
 ##############################################################################
