@@ -7,8 +7,6 @@
 import sys
 if ((sys.version_info[0] != 3) or (sys.version_info[1] < 6)):
     raise Exception('cmu_112_graphics.py requires Python version 3.6 or later.')
-path = 'C:\\Users\\anjua\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.7_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python37\\site-packages'
-sys.path.append(path)
 
 # Track version and file update timestamp
 import datetime

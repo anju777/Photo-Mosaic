@@ -13,7 +13,8 @@ from selenium.webdriver import Chrome
 
 ############################## MAIN FUNCTIONS #################################
 def keywordImageRetriever(keyword, n=300):
-    path = f'C:/Users/anjua/OneDrive/Desktop/Photo-Mosaic/SampleImages/{keyword}'
+    keywordDirectory = modifyKeywordForDirectory(keyword)
+    path = f'C:/Users/anjua/OneDrive/Desktop/Photo-Mosaic/SampleImages/{keywordDirectory}'
     if (os.path.exists(path) and ((len(os.listdir(path)) + 50) > n)):
         imageList = retrieveImagesFromFile(path)
         return imageList
@@ -23,6 +24,19 @@ def keywordImageRetriever(keyword, n=300):
     imageList.pop(0)
     saveImageList(imageList, path)
     return imageList
+##############################################################################
+
+########################## modifyKeywordForDirectory #########################
+def modifyKeywordForDirectory(keyword):
+    illegalPunctuation = {'\\', '/', ':', '*', '?', '"', '<', '>', '|'}
+    i = 0
+    while (i < len(keyword)):
+        if (keyword[i] in illegalPunctuation):
+            keyword = keyword[:i] + keyword[i+1:]
+        else: i += 1
+    if (keyword == ''):
+        return '_'
+    return keyword
 ##############################################################################
 
 ######################## retrieveHtmlsFromGoogleImage ########################
@@ -40,7 +54,7 @@ def retrieveHtmlsFromGoogleImage(keyword):
         time.sleep(0.1)
         html = getHtmlOfGoogleImagePage(driver)
         htmlList.append(html)
-        '''driver.execute_script("location.reload();")
+        driver.execute_script("location.reload();")
         time.sleep(0.1)
         driver.find_element_by_class_name('PNyWAd.ZXJQ7c').click() # Clicks on Tool
         time.sleep(1)
@@ -52,7 +66,7 @@ def retrieveHtmlsFromGoogleImage(keyword):
             else: driver.find_element_by_xpath(f"//div[@class='Ix6LGe']/div[1]/a[{n}]/div[1]/div[1]").click()
             time.sleep(0.2)
             html = getHtmlOfGoogleImagePage(driver)
-            htmlList.append(html)'''
+            htmlList.append(html)
         return htmlList
         
 # Assumes that element is already at top of Google Image page, and retrieves html
