@@ -18,7 +18,7 @@ def keywordImageRetriever(keyword, n=300):
     if (os.path.exists(path) and ((len(os.listdir(path)) + 50) > n)):
         imageList = retrieveImagesFromFile(path)
         return imageList
-    htmlList = retrieveHtmlsFromGoogleImage(keyword)
+    htmlList = retrieveHtmlsFromGoogleImage(keyword, n)
     imageUrls = retrieveImageUrlsFromList(htmlList)
     imageList = convertUrlsToImages(imageUrls)
     imageList.pop(0)
@@ -41,7 +41,7 @@ def modifyKeywordForDirectory(keyword):
 
 ######################## retrieveHtmlsFromGoogleImage ########################
 # Use Selenium to search Google Image for keyword, and returns HTML of that page
-def retrieveHtmlsFromGoogleImage(keyword):
+def retrieveHtmlsFromGoogleImage(keyword, n=''):
     chromeDriverPath = 'C:\\Users\\anjua\\AppData\\Local\\Programs\\Python\\Python37\\Lib\\chromedriver_win32\\chromedriver.exe'
     htmlList = []
     with Chrome(chromeDriverPath) as driver:
@@ -54,19 +54,23 @@ def retrieveHtmlsFromGoogleImage(keyword):
         time.sleep(0.1)
         html = getHtmlOfGoogleImagePage(driver)
         htmlList.append(html)
-        driver.execute_script("location.reload();")
-        time.sleep(0.1)
-        driver.find_element_by_class_name('PNyWAd.ZXJQ7c').click() # Clicks on Tool
-        time.sleep(1)
-        nColor = 12
-        for n in range(nColor):
-            driver.find_element_by_xpath("//div[@class='D0HoIc itb-h']/div[2]/div[1]/div[1]").click() # Clicks on Color Option
+        
+        if (n):
+            ### color selection: runs if there is any input for n
+            driver.execute_script("location.reload();")
+            time.sleep(0.1)
+            driver.find_element_by_class_name('PNyWAd.ZXJQ7c').click() # Clicks on Tool
             time.sleep(1)
-            if (n == 0): driver.find_element_by_class_name("sE24ib").click()
-            else: driver.find_element_by_xpath(f"//div[@class='Ix6LGe']/div[1]/a[{n}]/div[1]/div[1]").click()
-            time.sleep(0.2)
-            html = getHtmlOfGoogleImagePage(driver)
-            htmlList.append(html)
+            nColor = 12
+            for n in range(nColor):
+                driver.find_element_by_xpath("//div[@class='D0HoIc itb-h']/div[2]/div[1]/div[1]").click() # Clicks on Color Option
+                time.sleep(1)
+                if (n == 0): driver.find_element_by_class_name("sE24ib").click()
+                else: driver.find_element_by_xpath(f"//div[@class='Ix6LGe']/div[1]/a[{n}]/div[1]/div[1]").click()
+                time.sleep(0.2)
+                html = getHtmlOfGoogleImagePage(driver)
+                htmlList.append(html)
+
         return htmlList
         
 # Assumes that element is already at top of Google Image page, and retrieves html

@@ -5,6 +5,11 @@ from cmu_112_graphics import *
 from imageScraper import keywordImageRetriever, convertUrlToImage, retrieveImagesFromFile
 from imageMosaicOperator import imageMosaicCreator
 
+# Sample Main Images from: 
+# https://wallpaperhd.wiki/wp-content/uploads/desktop-high-res-hd-wallpapers-hd-high-resolution-wallpaper-for-desktop
+#   -wallpaper-hd-widescreen-high-quality-desktop-nature-12-wallpapers-hd-widescreen-high-quality-desktop-uyewRm.jpg
+# https://i.pinimg.com/originals/99/28/73/9928737a3504c5fc8269377d8ba5a122.jpg 
+# https://1.bp.blogspot.com/-lMg-uRzjXXQ/VWUVykvi6jI/AAAAAAAAAUA/SyND9ucVWU8/s1600/High%2BResolution%2BSpace%2BWallpaper.jpg
 '''ToDo:
 - Design Title Image Text
 - Create background image (idea: photo mosaic)
@@ -17,8 +22,6 @@ class TitleMode(Mode):
         mode.titleText = 'PHOTO MOSAIC\nCREATOR'
         mode.optionsText = ['Create', 'Help']
         mode.optionsDestination = [mode.app.ImportSamplesMode, mode.app.HelpMode]
-        backgroundImageUrl = 'https://static.independent.co.uk/s3fs-public/thumbnails/image/2019/03/22/16/istock-644053990.jpg?w968h681'
-        mode.backgroundImage = convertUrlToImage(backgroundImageUrl)
         mode.buttonHeight = mode.height * 4/5
         mode.buttons = mode.app.createButtonsWithFixedY(mode, mode.optionsText, 
             mode.optionsDestination, mode.buttonHeight, 40, 200, 'rectangle', 'white')
@@ -35,7 +38,7 @@ class TitleMode(Mode):
         font = 'Arial 40 bold'
         cx = mode.width//2
         cy = mode.height//2
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.backgroundImage))
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.app.background))
         canvas.create_text(cx, cy, text=mode.titleText, font=font, fill='White')
         for button in mode.buttons:
             mode.app.drawButton(mode, button, canvas)
@@ -52,7 +55,8 @@ Here you can create photo mosaics based on keyword input or by importing your ow
 The basic features and their descriptions are listed below. Enjoy!
 
 - Keyword Feature: Takes in keyword and imports images from the Internet to use.
-- Import: Can import files from your computer to create your customized photo mosaics!
+- Import: Can import folder from your computer with all your favorite photos!
+              * The imported photo can have multiple files inside, and skips non-image files!
 \n\n\n\n\n
 \t\t\t***Press any key to return***
 '''
@@ -71,8 +75,6 @@ The basic features and their descriptions are listed below. Enjoy!
 class SelectionMode(Mode):
     def appStarted(mode):
         mode.titleText = 'Selection'
-        backgroundImageUrl = 'https://previews.123rf.com/images/mycteria/mycteria1512/mycteria151200044/49529679-abstract-frozen-background-of-ice.jpg'
-        mode.backgroundImage = convertUrlToImage(backgroundImageUrl)
         mode.createButtons()
 
     def createButtons(mode):
@@ -103,7 +105,7 @@ class SelectionMode(Mode):
         cx = mode.width//2
         cy = mode.height//2
         titley = mode.height*1/3
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.backgroundImage))
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.app.background))
         canvas.create_text(cx, titley, text=mode.titleText, font=font, fill='Navy')
         for button in mode.buttons:
             mode.app.drawButton(mode, button, canvas)
@@ -112,8 +114,6 @@ class ImportSamplesMode(Mode):
     def appStarted(mode):
         mode.input = ''
         mode.createButtons()
-        backgroundImageUrl = 'https://static.independent.co.uk/s3fs-public/thumbnails/image/2019/03/22/16/istock-644053990.jpg?w968h681'
-        mode.backgroundImage = convertUrlToImage(backgroundImageUrl)
         mode.keywordBar = False
         mode.sampleImages = None
         mode.counter = 1
@@ -124,14 +124,17 @@ class ImportSamplesMode(Mode):
         keywordHeight = 40
         keywordButton = Button(mode.keywordMargin, mode.keywordY-(keywordHeight//2), 
             mode.width-mode.keywordMargin, mode.keywordY+(keywordHeight//2))
+
         importWidth = 150
         importHeight = 40
         importY = mode.height*0.7
         importButton = Button((mode.width//2)-(importWidth//2), importY-(importHeight//2),
             (mode.width//2)+(importWidth//2), importY+(importHeight//2), 'Import')
+
         nextWidth = 120
         mode.nextButton = Button(mode.width*0.7, mode.height*0.8, mode.width*0.7+nextWidth,
-            mode.height*0.8+40, 'Next', mode.app.LoadingMode, color='gray')
+            mode.height*0.8+40, 'Next', mode.app.ImportMainMode, color='gray')
+
         mode.buttons = [keywordButton, importButton, mode.nextButton]
     
     def timerFired(mode):
@@ -145,10 +148,8 @@ class ImportSamplesMode(Mode):
                 if (button.content == ''):
                     mode.keywordBar = True
                 elif (button.content == 'Import'):
-                    '''asksaveasfilename, askdirectory'''
                     mode.app.sampleImagesFile = filedialog.askdirectory(title='Select file: ')
                     mode.app.sampleImages = retrieveImagesFromFile(mode.app.sampleImagesFile)
-                    #mode.app.sampleImages = filedialog.askopenfilename(initialdir=os.getcwd(), title='Select file: ',filetypes = (('Image files','*.png *.gif *.jpg'),('all files','*.*')))
                 elif (button.content == 'Next'):
                     if (mode.app.sampleImages):
                         mode.app.setActiveMode(nextMode)
@@ -181,7 +182,7 @@ class ImportSamplesMode(Mode):
         cy = mode.height//2
         font='Arial 20 bold'
         fontColor = 'white'
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.backgroundImage))
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.app.background))
         canvas.create_text(cx, mode.height*0.1, text='Sample Images', fill=fontColor, font=font)
         canvas.create_text(cx, mode.height*0.3, text='Import with Keyword!\n(Press Enter to Search)', fill=fontColor, font=font)
         for button in mode.buttons:
@@ -194,41 +195,122 @@ class ImportVideoSamplesMode(ImportSamplesMode):
 
 class ImportMainMode(Mode):
     def appStarted(mode):
-        mode.mainImage = 'https://static.independent.co.uk/s3fs-public/thumbnails/image/2019/03/22/16/istock-644053990.jpg?w968h681'
-        mode.mainImage = convertUrlToImage(mode.mainImage)
-        mode.mosaic = imageMosaicCreator(mode.mainImage, mode.app.sampleImages)
+        path = 'C:\\Users\\anjua\\OneDrive\\Desktop\\Photo-Mosaic\\MainImages'
+        mode.mainImages = retrieveImagesFromFile(path)
+        mode.resizeMainImages() #destructive function
+        mode.createButtons()
     
+    def resizeMainImages(mode):
+        for i in range(len(mode.mainImages)):
+            mode.mainImages[i] = mode.app.frameImage(mode.mainImages[i], 
+                (mode.width*0.2, mode.height*0.2))
+
+    def createButtons(mode):
+        importWidth = 150
+        importHeight = 40
+        importY = mode.height*0.7
+        importButton = Button((mode.width//2)-(importWidth//2), importY-(importHeight//2),
+            (mode.width//2)+(importWidth//2), importY+(importHeight//2), 'Import')
+
+        nextWidth = 120
+        mode.nextButton = Button(mode.width*0.7, mode.height*0.8, mode.width*0.7+nextWidth,
+            mode.height*0.8+40, 'Next', mode.app.ImportMainMode, color='gray')
+        
+        mode.buttons = [importButton, mode.nextButton]
+
+    def timerFired(mode):
+        if (mode.app.mainImage):
+            mode.nextButton.color = 'white'
+    
+    def mousePressed(mode, event):
+        for button in mode.buttons:
+            nextMode = button.isClicked(event.x, event.y)
+            if (nextMode):
+                if (button.content == 'Import'):
+                    # Citation: filedialog.askdirectory modified version from cmu_112_graphics.py:
+                    # https://www.cs.cmu.edu/~112/notes/cmu_112_graphics.py 
+                    mode.app.mainImage = filedialog.askopenfile(title='Select file: ', 
+                        filetypes=(('Image files', '*.png *.gif *.jpg'), ('Video files', '*.mp4 *.mov *.avi *.wmv *.flv')))
+                elif (button.content == 'Next'):
+                    if (mode.app.mainImage):
+                        mode.app.setActiveMode(nextMode)
+                    else:
+                        mode.app.showMessage('Please select main image first')
+
     def redrawAll(mode, canvas):
         cx = mode.width//2
         cy = mode.height//2
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.mosaic))
+        imageY = mode.height*0.4
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.app.background))
+        canvas.create_text(cx, mode.height*0.2, font='Arial 12 bold', fill='white',
+            text='Choose main image from below or import from your computer')
+        canvas.create_image(mode.width//4, imageY, image=ImageTk.PhotoImage(mode.mainImages[0]))
+        canvas.create_image(mode.width//2, imageY, image=ImageTk.PhotoImage(mode.mainImages[1]))
+        canvas.create_image(mode.width*3//4, imageY, image=ImageTk.PhotoImage(mode.mainImages[2]))
+        for button in mode.buttons:
+            mode.app.drawButton(mode, button, canvas)
         
 class LoadingMode(Mode):
     def appStarted(mode):
         mode.counter = 1
-        mode.gifImages = mode.app.loadGifFromUrl('https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif')
-        mode.gifCounter = 0
+        mode.background = mode.app.fullScreenColor(mode, (0, 0, 0))
+        #mode.gifImages = mode.app.loadGifFromUrl('https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif')
+        #mode.gifCounter = 0
 
     def timerFired(mode):
         mode.counter += 1
-        mode.gifcounter += 1
-        mode.gifcounter %= len(mode.gifImages)
+        #mode.gifCounter = (mode.gifCounter + 1) % len(mode.gifImages)
         if (mode.counter % 10 == 0):
-            mode.app.setActiveMode(mode.app.DisplayMode)
+            mode.app.setActiveMode(mode.app.SaveMode)
 
     def redrawAll(mode, canvas):
-        canvas.create_image(mode.width//2, mode.height//2, image=mode.gifImages[mode.gifCounter])
+        cx, cy = mode.width//2, mode.height//2
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.background))
+        canvas.create_text(cx, cy, text='Loading', font='Georgia 24', fill='white')
 
 class DisplayMode(Mode):
     def appStarted(mode):
-        mode.mainImage = 'https://static.independent.co.uk/s3fs-public/thumbnails/image/2019/03/22/16/istock-644053990.jpg?w968h681'
-        mode.mainImage = convertUrlToImage(mode.mainImage)
-        mode.mosaic = imageMosaicCreator(mode.mainImage, mode.app.sampleImages)
+        mode.app.mosaic = imageMosaicCreator(mode.mainImage, mode.app.sampleImages)
     
     def redrawAll(mode, canvas):
         cx = mode.width//2
         cy = mode.height//2
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.mosaic))
+        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.app.mosaic))
+
+class SaveMode(Mode):
+    def appStarted(mode):
+        margin = 20
+        mode.frameWidth, mode.frameHeight = mode.width-mode.buttonWidth-(2*margin), mode.height-(2*margin)
+        mode.mosaicForDisplay = mode.app.frameImage(mode.app.mosaic, (frameWidth, frameHeight))
+        mode.createButtons()
+    
+    def createButtons(mode):
+        mode.buttonWidth = 120
+        mode.buttonHeight = 40
+        margin = 10
+        saveButton = Button(mode.width-margin-mode.buttonWidth, mode.height*0.7-mode.buttonHeight//2, 
+            mode.width-margin, mode.height*0.7+mode.buttonheight//2, content='Save')
+        homeButton = Butotn(mode.width-margin-mode.buttonWidth, mode.height*0.3-mode.buttonHeight//2,
+            mode.width-margin, mode.height*0.7+mode.buttonHeight//2, content='Back to Home',
+            targetMode=mode.app.TitleMode)
+        
+        mode.buttons = [saveButton, homeButton]
+
+    def mouseClicked(mode, event):
+        for button in mode.buttons:
+            nextMode = button.isClicked(event.x, event.y)
+            if (nextMode):
+                if (content=='Save'):
+                    filedialog.asksaveasfilename(mode.app.mosaic)
+                else:
+                    mode.app.setActiveMode(nextMode)
+
+    def redrawAll(mode, canvas):
+        canvas.create_image(mode.width//2, mode.height//2, image=ImageTk.PhotoImage(mode.app.background))
+        # Mosaic already sized at appropriate size
+        canvas.create_image((mode.frameWidth-80)//2, mode.height//2, image=ImageTk.PhotoImage(mode.mosaicForDisplay))
+        for button in mode.buttons:
+            mode.app.drawButton(mode, button, canvas)
 
 class Button(object):
     def __init__(self, x1, y1, x2, y2, content='', targetMode=True, buttonType='rectangle', 
@@ -249,6 +331,7 @@ class Button(object):
         self.cx = x1 + self.rx
         self.cy = y1 + self.ry
 
+    # Returns True if clicked and mode not specified. Else, None
     def isClicked(self, x, y):
         if (self.type=='rectangle'):
             if (self.x1 < x and x < self.x2 and self.y1 < y and y < self.y2):
@@ -278,7 +361,13 @@ class PhotoMosaicApp(ModalApp):
         app.ImportMainMode = ImportMainMode()
         app.LoadingMode = LoadingMode()
         app.DisplayMode = DisplayMode()
+        app.SaveMode = SaveMode()
+        
+        app.background = 'https://static.independent.co.uk/s3fs-public/thumbnails/image/2019/03/22/16/istock-644053990.jpg?w968h681'
+        app.background = convertUrlToImage(app.background)
         app.sampleImages = None
+        app.mainImage = None 
+        app.mosaic = None
         app.setActiveMode(app.TitleMode)
 
     ########################## Helper Functions ###########################
@@ -320,21 +409,45 @@ class PhotoMosaicApp(ModalApp):
         return result
     '''
 
+    # The GIF in GIF List is an instance of Tkinter Image
     @staticmethod
     def loadGifFromUrl(GIFUrl):
         # Citation: GIF taken from wikiMedia Commons from below
         # https://upload.wikimedia.org/wikipedia/commons/c/c7/Loading_2.gif
-        loadingGIF = convertUrlToImage(GIFUrl)
+        gif = convertUrlToImage(GIFUrl)
         gifImage = []
         i = 0
         while True:
             try:
-                gifFrame = ImageTk.PhotoImage(file=loadingGIF, format=f"gif -index {i}")
+                gif.seek(i)
                 i += 1
-                gifImage.append(gifFrame)
+                gifImage.append(ImageTk.PhotoImage(gif))
             except:
                 break
         return gifImage
+
+    # Creates solid color background that fills up the whole screen
+    # Color can be imputted as tuple(R, G, B) or actual input of Image.new (need to specify mode)
+    @staticmethod
+    def fullScreenColor(app, color=0, mode='RGB'):
+        if (isinstance(color, tuple) and mode=='RGB'):
+            color = 'rgb' + str(color)
+        image = Image.new(mode, (app.width, app.height), color)
+        return image
+
+    @staticmethod
+    # Resizes object so that it fits in the frame
+    # Input: image type: Image, frame: tuple(width, height) or any object with attribute width & height
+    # Output: Image (that they took in, but resized. Nondestructive)
+    def frameImage(image, frame):
+        if (isinstance(frame, tuple)):
+            frameWidth, frameHeight = frame
+        else:
+            frameWidth, frameHeight = frame.width, frame.height
+        ratioWidth, ratioHeight = frameWidth/image.width, frameHeight/image.height
+        baseRatio = min(ratioWidth, ratioHeight)
+        targetWidth, targetHeight = int(image.width*baseRatio), int(image.height*baseRatio)
+        return image.resize((targetWidth, targetHeight))
     #######################################################################
 
 def run(width=800, height=600):
