@@ -214,7 +214,7 @@ class ImportMainMode(Mode):
 
         nextWidth = 120
         mode.nextButton = Button(mode.width*0.7, mode.height*0.8, mode.width*0.7+nextWidth,
-            mode.height*0.8+40, 'Next', mode.app.ImportMainMode, color='gray')
+            mode.height*0.8+40, 'Next', mode.app.LoadingMode, color='gray')
         
         mode.buttons = [importButton, mode.nextButton]
 
@@ -231,6 +231,7 @@ class ImportMainMode(Mode):
                     # https://www.cs.cmu.edu/~112/notes/cmu_112_graphics.py 
                     mode.app.mainImage = filedialog.askopenfile(title='Select file: ', 
                         filetypes=(('Image files', '*.png *.gif *.jpg'), ('Video files', '*.mp4 *.mov *.avi *.wmv *.flv')))
+                    print(type(mode.app.mainImage))
                 elif (button.content == 'Next'):
                     if (mode.app.mainImage):
                         mode.app.setActiveMode(nextMode)
@@ -268,25 +269,28 @@ class LoadingMode(Mode):
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.background))
         canvas.create_text(cx, cy, text='Loading', font='Georgia 24', fill='white')
 
+'''
 class DisplayMode(Mode):
     def appStarted(mode):
         mode.app.mosaic = imageMosaicCreator(mode.mainImage, mode.app.sampleImages)
-    
+
     def redrawAll(mode, canvas):
         cx = mode.width//2
         cy = mode.height//2
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.app.mosaic))
+'''
 
 class SaveMode(Mode):
     def appStarted(mode):
+        mode.app.mosaic = imageMosaicCreator(mode.app.mainImage, mode.app.sampleImages)
         margin = 20
-        mode.frameWidth, mode.frameHeight = mode.width-mode.buttonWidth-(2*margin), mode.height-(2*margin)
+        mode.buttonWidth = 120
+        mode.buttonHeight = 40
+        frameWidth, frameHeight = mode.width-mode.buttonWidth-(2*margin), mode.height-(2*margin)
         mode.mosaicForDisplay = mode.app.frameImage(mode.app.mosaic, (frameWidth, frameHeight))
         mode.createButtons()
     
     def createButtons(mode):
-        mode.buttonWidth = 120
-        mode.buttonHeight = 40
         margin = 10
         saveButton = Button(mode.width-margin-mode.buttonWidth, mode.height*0.7-mode.buttonHeight//2, 
             mode.width-margin, mode.height*0.7+mode.buttonheight//2, content='Save')
@@ -360,7 +364,6 @@ class PhotoMosaicApp(ModalApp):
         app.ImportVideoSamplesMode = ImportVideoSamplesMode()
         app.ImportMainMode = ImportMainMode()
         app.LoadingMode = LoadingMode()
-        app.DisplayMode = DisplayMode()
         app.SaveMode = SaveMode()
         
         app.background = 'https://static.independent.co.uk/s3fs-public/thumbnails/image/2019/03/22/16/istock-644053990.jpg?w968h681'
