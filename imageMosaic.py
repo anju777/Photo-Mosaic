@@ -6,8 +6,7 @@ from imageScraper import keywordImageRetriever, convertUrlToImage, retrieveImage
 from imageMosaicOperator import imageMosaicCreator
 
 # Sample Main Images from: 
-# https://wallpaperhd.wiki/wp-content/uploads/desktop-high-res-hd-wallpapers-hd-high-resolution-wallpaper-for-desktop
-#   -wallpaper-hd-widescreen-high-quality-desktop-nature-12-wallpapers-hd-widescreen-high-quality-desktop-uyewRm.jpg
+# https://i.pinimg.com/originals/54/a0/8f/54a08f440ac87229c787c4a7d4d7c2e1.jpg
 # https://i.pinimg.com/originals/99/28/73/9928737a3504c5fc8269377d8ba5a122.jpg 
 # https://1.bp.blogspot.com/-lMg-uRzjXXQ/VWUVykvi6jI/AAAAAAAAAUA/SyND9ucVWU8/s1600/High%2BResolution%2BSpace%2BWallpaper.jpg
 '''ToDo:
@@ -38,7 +37,7 @@ class TitleMode(Mode):
         font = 'Arial 40 bold'
         cx = mode.width//2
         cy = mode.height//2
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.app.background))
+        canvas.create_image(cx, cy, image=mode.app.background)
         canvas.create_text(cx, cy, text=mode.titleText, font=font, fill='White')
         for button in mode.buttons:
             mode.app.drawButton(mode, button, canvas)
@@ -104,17 +103,17 @@ class SelectionMode(Mode):
         font = 'Arial 40 bold'
         cx = mode.width//2
         cy = mode.height//2
-        titley = mode.height*1/3
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.app.background))
-        canvas.create_text(cx, titley, text=mode.titleText, font=font, fill='Navy')
+        titleY = mode.height*1/3
+        canvas.create_image(cx, cy, image=mode.app.background)
+        canvas.create_text(cx, titleY, text=mode.titleText, font=font, fill='Navy')
         for button in mode.buttons:
             mode.app.drawButton(mode, button, canvas)
 
 class ImportSamplesMode(Mode):
     def appStarted(mode):
-        mode.input = ''
+        mode.app.input = ''
         mode.createButtons()
-        mode.keywordBar = False
+        mode.app.keywordBar = False
         mode.sampleImages = None
         mode.counter = 1
 
@@ -140,49 +139,52 @@ class ImportSamplesMode(Mode):
     def timerFired(mode):
         if (mode.app.sampleImages):
             mode.nextButton.color = 'white'
+        else: mode.nextButton.color = 'gray'
 
     def mousePressed(mode, event):
         for button in mode.buttons:
             nextMode = button.isClicked(event.x, event.y)
             if (nextMode):
                 if (button.content == ''):
-                    mode.keywordBar = True
+                    mode.app.keywordBar = True
                 elif (button.content == 'Import'):
                     mode.app.sampleImagesFile = filedialog.askdirectory(title='Select file: ')
-                    mode.app.sampleImages = retrieveImagesFromFile(mode.app.sampleImagesFile)
+                    if (mode.app.sampleImagesFile):
+                        mode.app.sampleImages = retrieveImagesFromFile(mode.app.sampleImagesFile)
                 elif (button.content == 'Next'):
                     if (mode.app.sampleImages):
+                        mode.nextButton.color = 'gray'
                         mode.app.setActiveMode(nextMode)
                     else:
                         mode.app.showMessage('Please import sample images first')
 
     def keyPressed(mode, event):
-        if (mode.keywordBar):
+        if (mode.app.keywordBar):
             if (event.key == 'Space'):
-                mode.input += ' '
+                mode.app.input += ' '
             elif (event.key == 'Backspace'):
-                mode.input = mode.input[:-1]
+                mode.app.input = mode.app.input[:-1]
             elif (event.key == 'Enter'):
-                mode.app.sampleImages = keywordImageRetriever(mode.input)
+                mode.app.sampleImages = keywordImageRetriever(mode.app.input)
             elif (len(event.key) == 1):
-                mode.input += event.key
+                mode.app.input += event.key
 
     def drawInput(mode, canvas):
         font = 'Arial 20 bold'
         mode.counter += 1
         blinkTime = 20
         inputX = mode.keywordMargin + 10
-        if (mode.keywordBar and mode.counter%blinkTime < blinkTime//2):
-            canvas.create_text(inputX, mode.keywordY, text=(mode.input + '|'), 
+        if (mode.app.keywordBar and mode.counter%blinkTime < blinkTime//2):
+            canvas.create_text(inputX, mode.keywordY, text=(mode.app.input + '|'), 
                 anchor='w', fill='Black', font=font)
-        canvas.create_text(inputX, mode.keywordY, text=mode.input, anchor='w', fill='Black', font=font)
+        canvas.create_text(inputX, mode.keywordY, text=mode.app.input, anchor='w', fill='Black', font=font)
 
     def redrawAll(mode, canvas):
         cx = mode.width//2
         cy = mode.height//2
         font='Arial 20 bold'
         fontColor = 'white'
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.app.background))
+        canvas.create_image(cx, cy, image=mode.app.background)
         canvas.create_text(cx, mode.height*0.1, text='Sample Images', fill=fontColor, font=font)
         canvas.create_text(cx, mode.height*0.3, text='Import with Keyword!\n(Press Enter to Search)', fill=fontColor, font=font)
         for button in mode.buttons:
@@ -195,15 +197,18 @@ class ImportVideoSamplesMode(ImportSamplesMode):
 
 class ImportMainMode(Mode):
     def appStarted(mode):
-        path = 'C:\\Users\\anjua\\OneDrive\\Desktop\\Photo-Mosaic\\MainImages'
-        mode.mainImages = retrieveImagesFromFile(path)
-        mode.resizeMainImages() #destructive function
+        # Citation: main images taken from URL in functions below
+        mode.main1 = convertUrlToImage('https://i.pinimg.com/originals/54/a0/8f/54a08f440ac87229c787c4a7d4d7c2e1.jpg')
+        mode.main2 = convertUrlToImage('https://i.pinimg.com/originals/99/28/73/9928737a3504c5fc8269377d8ba5a122.jpg')
+        mode.main3 = convertUrlToImage('https://1.bp.blogspot.com/-lMg-uRzjXXQ/VWUVykvi6jI/AAAAAAAAAUA/SyND9ucVWU8/s1600/High%2BResolution%2BSpace%2BWallpaper.jpg')
+
+        mode.mainImages = [mode.main1, mode.main2, mode.main3]
         mode.createButtons()
-    
+    '''
     def resizeMainImages(mode):
         for i in range(len(mode.mainImages)):
             mode.mainImages[i] = mode.app.frameImage(mode.mainImages[i], 
-                (mode.width*0.2, mode.height*0.2))
+                (mode.width*0.2, mode.height*0.2))'''
 
     def createButtons(mode):
         importWidth = 150
@@ -215,12 +220,25 @@ class ImportMainMode(Mode):
         nextWidth = 120
         mode.nextButton = Button(mode.width*0.7, mode.height*0.8, mode.width*0.7+nextWidth,
             mode.height*0.8+40, 'Next', mode.app.LoadingMode, color='gray')
-        
-        mode.buttons = [importButton, mode.nextButton]
+
+        mode.imageX = mode.width//4
+        mode.imageY = mode.height*0.4
+        main1Button = Button(mode.imageX-mode.width*0.2//2, mode.imageY-mode.height*0.2//2,
+                mode.imageX+mode.width*0.2//2, mode.imageY+mode.height*0.2//2,
+                content=mode.mainImages[0], width=0)
+        main2Button = Button(mode.imageX*2-mode.width*0.2//2, mode.imageY-mode.height*0.2//2,
+                mode.imageX*2+mode.width*0.2//2, mode.imageY+mode.height*0.2//2,
+                content=mode.mainImages[1], width=0)
+        main3Button = Button(mode.imageX*3-mode.width*0.2//2, mode.imageY-mode.height*0.2//2,
+                mode.imageX*3+mode.width*0.2//2, mode.imageY+mode.height*0.2//2,
+                content=mode.mainImages[2], width=0)
+
+        mode.buttons = [importButton, mode.nextButton, main1Button, main2Button, main3Button]
 
     def timerFired(mode):
         if (mode.app.mainImage):
             mode.nextButton.color = 'white'
+        else: mode.nextButton.color = 'gray'
     
     def mousePressed(mode, event):
         for button in mode.buttons:
@@ -231,24 +249,26 @@ class ImportMainMode(Mode):
                     # https://www.cs.cmu.edu/~112/notes/cmu_112_graphics.py 
                     mode.app.mainImage = filedialog.askopenfile(title='Select file: ', 
                         filetypes=(('Image files', '*.png *.gif *.jpg'), ('Video files', '*.mp4 *.mov *.avi *.wmv *.flv')))
-                    print(type(mode.app.mainImage))
                 elif (button.content == 'Next'):
                     if (mode.app.mainImage):
+                        mode.nextButton.color = 'gray'
                         mode.app.setActiveMode(nextMode)
                     else:
                         mode.app.showMessage('Please select main image first')
+                elif (type(button.content) == type(mode.mainImages[0])):
+                    mode.app.mainImage = button.content
 
     def redrawAll(mode, canvas):
         cx = mode.width//2
         cy = mode.height//2
-        imageY = mode.height*0.4
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.app.background))
-        canvas.create_text(cx, mode.height*0.2, font='Arial 12 bold', fill='white',
-            text='Choose main image from below or import from your computer')
-        canvas.create_image(mode.width//4, imageY, image=ImageTk.PhotoImage(mode.mainImages[0]))
-        canvas.create_image(mode.width//2, imageY, image=ImageTk.PhotoImage(mode.mainImages[1]))
-        canvas.create_image(mode.width*3//4, imageY, image=ImageTk.PhotoImage(mode.mainImages[2]))
-        for button in mode.buttons:
+        canvas.create_image(cx, cy, image=mode.app.background)
+        canvas.create_text(cx, mode.height*0.1, font='Arial 20 bold', fill='white',
+            text='Main Images')
+        canvas.create_text(cx, mode.height*0.25, font='Arial 16 bold', fill='white',
+            text='Choose Main Image from the Samples Below:')
+        canvas.create_text(cx, mode.height*0.6, font='Arial 16 bold', fill='white',
+            text='...Or Import from your Computer!')
+        for button in mode.buttons:    
             mode.app.drawButton(mode, button, canvas)
         
 class LoadingMode(Mode):
@@ -262,6 +282,9 @@ class LoadingMode(Mode):
         mode.counter += 1
         #mode.gifCounter = (mode.gifCounter + 1) % len(mode.gifImages)
         if (mode.counter % 10 == 0):
+            mode.app.mosaic = imageMosaicCreator(mode.app.mainImage, mode.app.sampleImages)
+            mode.frameWidth, mode.frameHeight = mode.width-80, mode.height-80
+            mode.app.mosaicForDisplay = mode.app.frameImage(mode.app.mosaic, (mode.frameWidth, mode.frameHeight))
             mode.app.setActiveMode(mode.app.SaveMode)
 
     def redrawAll(mode, canvas):
@@ -282,43 +305,44 @@ class DisplayMode(Mode):
 
 class SaveMode(Mode):
     def appStarted(mode):
-        mode.app.mosaic = imageMosaicCreator(mode.app.mainImage, mode.app.sampleImages)
-        margin = 20
         mode.buttonWidth = 120
         mode.buttonHeight = 40
-        frameWidth, frameHeight = mode.width-mode.buttonWidth-(2*margin), mode.height-(2*margin)
-        mode.mosaicForDisplay = mode.app.frameImage(mode.app.mosaic, (frameWidth, frameHeight))
         mode.createButtons()
     
     def createButtons(mode):
         margin = 10
-        saveButton = Button(mode.width-margin-mode.buttonWidth, mode.height*0.7-mode.buttonHeight//2, 
-            mode.width-margin, mode.height*0.7+mode.buttonheight//2, content='Save')
-        homeButton = Butotn(mode.width-margin-mode.buttonWidth, mode.height*0.3-mode.buttonHeight//2,
-            mode.width-margin, mode.height*0.7+mode.buttonHeight//2, content='Back to Home',
+        saveButton = Button(mode.width*0.3-mode.buttonWidth//2, mode.height*0.9-mode.buttonHeight//2, 
+            mode.width*0.3+mode.buttonWidth//2, mode.height*0.9+mode.buttonHeight//2, content='Save')
+        homeButton = Button(mode.width*0.7-mode.buttonWidth//2, mode.height*0.9-mode.buttonHeight//2,
+            mode.width*0.7+mode.buttonWidth//2, mode.height*0.9+mode.buttonHeight//2, content='Home',
             targetMode=mode.app.TitleMode)
         
         mode.buttons = [saveButton, homeButton]
 
-    def mouseClicked(mode, event):
+    def mousePressed(mode, event):
         for button in mode.buttons:
             nextMode = button.isClicked(event.x, event.y)
             if (nextMode):
-                if (content=='Save'):
-                    filedialog.asksaveasfilename(mode.app.mosaic)
-                else:
+                if (button.content=='Save'):
+                    filedialog.asksaveasfilename()
+                elif (button.content=='Home'):
+                    mode.app.sampleImages = None
+                    mode.app.mainImage = None 
+                    mode.app.mosaic = None
+                    mode.app.input = ''
+                    mode.app.keywordBar = False
                     mode.app.setActiveMode(nextMode)
 
     def redrawAll(mode, canvas):
-        canvas.create_image(mode.width//2, mode.height//2, image=ImageTk.PhotoImage(mode.app.background))
+        canvas.create_image(mode.width//2, mode.height//2, image=mode.app.background)
         # Mosaic already sized at appropriate size
-        canvas.create_image((mode.frameWidth-80)//2, mode.height//2, image=ImageTk.PhotoImage(mode.mosaicForDisplay))
+        canvas.create_image(mode.width//2, (mode.height*0.9-mode.buttonHeight//2)//2, image=ImageTk.PhotoImage(mode.app.mosaicForDisplay))
         for button in mode.buttons:
             mode.app.drawButton(mode, button, canvas)
 
 class Button(object):
     def __init__(self, x1, y1, x2, y2, content='', targetMode=True, buttonType='rectangle', 
-            color='white', font='Arial 20 bold', fill='black'):
+            color='white', font='Arial 20 bold', fill='black', width=1):
         typeOptions = {'rectangle', 'ellipse', 'hexagon', 'rounded rectangle'}
         self.x1 = x1
         self.y1 = y1
@@ -330,6 +354,7 @@ class Button(object):
         self.color = color
         self.font = font
         self.fill = fill
+        self.width = width
         self.rx = (x2 - x1)//2
         self.ry = (y2 - y1)//2
         self.cx = x1 + self.rx
@@ -345,12 +370,6 @@ class Button(object):
             if (((self.cx-x)**2  + (self.cy-y)**2)**0.5 < self.rx):
                 return self.targetMode
             else: return None
-        '''
-        elif (self.type == 'hexagon'):
-            if (not inRect(x, y, self.x1+self.cy, self.y1, self.x2-self.cy, self.y2)):
-                return False
-            if (self.x1 < x and x < (self.x1 + self.cy) and self. y < )
-        '''
 
     def __repr__(self):
         return f'<Button object ({self.x1}, {self.y1}), ({self.x2}, {self.y2}), shape: {self.type}'
@@ -366,8 +385,9 @@ class PhotoMosaicApp(ModalApp):
         app.LoadingMode = LoadingMode()
         app.SaveMode = SaveMode()
         
+        # Citation: Background Image taken from below URL
         app.background = 'https://static.independent.co.uk/s3fs-public/thumbnails/image/2019/03/22/16/istock-644053990.jpg?w968h681'
-        app.background = convertUrlToImage(app.background)
+        app.background = ImageTk.PhotoImage(convertUrlToImage(app.background))
         app.sampleImages = None
         app.mainImage = None 
         app.mosaic = None
@@ -378,17 +398,21 @@ class PhotoMosaicApp(ModalApp):
     def drawButton(app, button, canvas):    # button is of object Button
         if (button.type == 'ellipse'):
             canvas.create_oval(button.x1, button.y1, button.x2, 
-                button.y2, fill=button.color)
+                button.y2, fill=button.color, width=button.width)
             if (isinstance(button.content, str)):
                 canvas.create_text(button.cx, button.cy, text=button.content,
                     font=button.font, fill=button.fill)
-            '''Add Image option too'''
         elif (button.type == 'rectangle'):
-            canvas.create_rectangle(button.x1, button.y1, button.x2, 
-                button.y2, fill=button.color)
             if (isinstance(button.content, str)):
+                canvas.create_rectangle(button.x1, button.y1, button.x2, 
+                    button.y2, fill=button.color, width=button.width)
                 canvas.create_text(button.cx, button.cy, text=button.content,
                     font=button.font, fill=button.fill)
+            else:
+                try:
+                    smallImage = PhotoMosaicApp.frameImage(button.content, (button.x2-button.x1, button.y2-button.y1))
+                    canvas.create_image(button.cx, button.cy, image=ImageTk.PhotoImage(smallImage))
+                except: pass
 
     # Takes in dictionary of buttons
     @staticmethod
