@@ -13,7 +13,6 @@ from imageMosaicOperator import imageMosaicCreator
 - Design Title Image Text
 - Create background image (idea: photo mosaic)
 - Figure out title text alignment (multi-line center option for help, etc.)
-- Different modes and versions with similarities -> OOP (subclass)
 '''
 
 class TitleMode(Mode):
@@ -148,7 +147,7 @@ class ImportSamplesMode(Mode):
                 if (button.content == ''):
                     mode.app.keywordBar = True
                 elif (button.content == 'Import'):
-                    mode.app.sampleImagesFile = filedialog.askdirectory(title='Select file: ')
+                    mode.app.sampleImagesFile = filedialog.askdirectory(title='Select folder: ')
                     if (mode.app.sampleImagesFile):
                         mode.app.sampleImages = retrieveImagesFromFile(mode.app.sampleImagesFile)
                 elif (button.content == 'Next'):
@@ -326,7 +325,10 @@ class SaveMode(Mode):
             nextMode = button.isClicked(event.x, event.y)
             if (nextMode):
                 if (button.content=='Save'):
-                    filedialog.asksaveasfilename()
+                    savePath = filedialog.asksaveasfile(title='Save file: ', 
+                        filetypes=(('jpg File', '*.jpg'), ('png File', '*.png')), 
+                        defaultextension=('jpg File', '*.jpg'))
+                    mode.app.mosaic.save(savePath)
                 elif (button.content=='Home'):
                     mode.app.sampleImages = None
                     mode.app.mainImage = None 
