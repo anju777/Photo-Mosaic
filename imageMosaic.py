@@ -247,8 +247,10 @@ class ImportMainMode(Mode):
                 if (button.content == 'Import'):
                     # Citation: filedialog.askdirectory modified version from cmu_112_graphics.py:
                     # https://www.cs.cmu.edu/~112/notes/cmu_112_graphics.py 
-                    mode.app.mainImage = filedialog.askopenfile(title='Select file: ', 
+                    mainImagePath = filedialog.askopenfilename(title='Select file: ', 
                         filetypes=(('Image files', '*.png *.gif *.jpg'), ('Video files', '*.mp4 *.mov *.avi *.wmv *.flv')))
+                    if (mainImagePath):
+                        mode.app.mainImage = Image.open(mainImagePath)
                 elif (button.content == 'Next'):
                     if (mode.app.mainImage):
                         mode.nextButton.color = 'gray'
