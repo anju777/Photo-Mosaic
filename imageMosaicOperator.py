@@ -23,19 +23,16 @@ imgPath = f"C:\\Users\\anjua\\OneDrive\\Pictures\\15112_TP\\{fileName}.jpg"
 image3 = Image.open(imgPath)
 #############################################################################
 
-def keywordMosaicCreator(mainImage, keyword):
-    sampleImages = keywordImageRetriever(keyword)
-    mosaic = imageMosaicCreator(mainImage, sampleImages)
-    mosaic.show()
-    return mosaic
-
 ############################### MAIN FUNCTION ###############################
 # Takes in an image object, and returns the image mosaic
-def imageMosaicCreator(mainImage, sampleImages):
+def imageMosaicCreator(mainImage, sampleImages, rowCol=None):
     # Allows function to take in imageUrl as mainImage as well
     if (isinstance(mainImage, str) and mainImage.startswith('http')):
         mainImage = convertUrlToImage(mainImage)
-    rows, cols = obtainRowsCols(mainImage)
+    if (rowCol == None):
+        rows, cols = obtainRowsCols(mainImage)
+    elif (isinstance(rowCol, tuple)):
+        rows, cols = rowCol
     sampleImages = sizeSampleImages(sampleImages, mainImage, rows, cols)
     sampleImagesRGB = getListOfRGBValues(sampleImages)
     griddedImages = gridImage(mainImage, rows, cols)

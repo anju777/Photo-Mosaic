@@ -9,11 +9,6 @@ from imageMosaicOperator import imageMosaicCreator
 # https://i.pinimg.com/originals/54/a0/8f/54a08f440ac87229c787c4a7d4d7c2e1.jpg
 # https://i.pinimg.com/originals/99/28/73/9928737a3504c5fc8269377d8ba5a122.jpg 
 # https://1.bp.blogspot.com/-lMg-uRzjXXQ/VWUVykvi6jI/AAAAAAAAAUA/SyND9ucVWU8/s1600/High%2BResolution%2BSpace%2BWallpaper.jpg
-'''ToDo:
-- Design Title Image Text
-- Create background image (idea: photo mosaic)
-- Figure out title text alignment (multi-line center option for help, etc.)
-'''
 
 class TitleMode(Mode):
     def appStarted(mode):
@@ -40,6 +35,8 @@ class TitleMode(Mode):
         canvas.create_text(cx, cy, text=mode.titleText, font=font, fill='White')
         for button in mode.buttons:
             mode.app.drawButton(mode, button, canvas)
+
+
 
 class HelpMode(Mode):
     def appStarted(mode):
@@ -69,6 +66,8 @@ The basic features and their descriptions are listed below. Enjoy!
             mode.width-mode.space-mode.margin, mode.height-mode.margin, 
             fill=mode.backgroundColor)
         canvas.create_text(mode.width//2, mode.height//2, text=mode.text, font=mode.font)
+
+
 
 class SelectionMode(Mode):
     def appStarted(mode):
@@ -107,6 +106,8 @@ class SelectionMode(Mode):
         canvas.create_text(cx, titleY, text=mode.titleText, font=font, fill='Navy')
         for button in mode.buttons:
             mode.app.drawButton(mode, button, canvas)
+
+
 
 class ImportSamplesMode(Mode):
     def appStarted(mode):
@@ -191,8 +192,7 @@ class ImportSamplesMode(Mode):
         mode.drawInput(canvas)
         canvas.create_text(cx, mode.height*0.6, text='Or Import from Computer!', fill=fontColor, font=font)
 
-class ImportVideoSamplesMode(ImportSamplesMode):
-    pass
+
 
 class ImportMainMode(Mode):
     def appStarted(mode):
@@ -203,11 +203,10 @@ class ImportMainMode(Mode):
 
         mode.mainImages = [mode.main1, mode.main2, mode.main3]
         mode.createButtons()
-    '''
-    def resizeMainImages(mode):
-        for i in range(len(mode.mainImages)):
-            mode.mainImages[i] = mode.app.frameImage(mode.mainImages[i], 
-                (mode.width*0.2, mode.height*0.2))'''
+        mode.app.rowsInput = mode.app.colsInput = ''
+        mode.app.rowsBar = mode.app.colsBar = False
+        mode.app.rowCol = None
+        mode.counter = 0
 
     def createButtons(mode):
         importWidth = 150
@@ -232,13 +231,62 @@ class ImportMainMode(Mode):
                 mode.imageX*3+mode.width*0.2//2, mode.imageY+mode.height*0.2//2,
                 content=mode.mainImages[2], width=0)
 
-        mode.buttons = [importButton, mode.nextButton, main1Button, main2Button, main3Button]
+        mode.rowColWidth = 60
+        mode.rowColHeight = 30
+        mode.rowColX = mode.width*0.15
+        mode.rowY = mode.height*0.74
+        mode.colY = mode.height*0.82
+        rowsButton = Button(mode.rowColX, mode.rowY, mode.rowColX+mode.rowColWidth,
+            mode.rowY+mode.rowColHeight, color='light gray', title='rows')
+        colsButton = Button(mode.rowColX, mode.colY, mode.rowColX+mode.rowColWidth, 
+            mode.colY+mode.rowColHeight, color='light gray', title='cols')
+
+        mode.buttons = [importButton, mode.nextButton, main1Button, main2Button, 
+            main3Button, rowsButton, colsButton]
 
     def timerFired(mode):
         if (mode.app.mainImage):
             mode.nextButton.color = 'white'
         else: mode.nextButton.color = 'gray'
     
+    def keyPressed(mode, event):
+        if (mode.app.rowsBar):
+            if (event.key == 'Backspace'):
+                mode.app.rowsInput = mode.app.rowsInput[:-1]
+            elif (event.key == 'Enter'):
+                if (mode.app.rowsInput.isdigit()):
+                    mode.app.rowsBar = False
+                else:
+                    mode.app.showMessage('Please enter an integer')
+            elif (len(event.key) == 1 and len(mode.app.rowsInput) < 5):
+                mode.app.rowsInput += event.key
+        elif (mode.app.colsBar):
+            if (event.key == 'Backspace'):
+                mode.app.colsInput = mode.app.colsInput[:-1]
+            elif (event.key == 'Enter'):
+                if (mode.app.colsInput.isdigit()):
+                    mode.app.colsBar = False
+                else:
+                    mode.app.showMessage('Please enter an integer')
+            elif (len(event.key) == 1 and len(mode.app.colsInput) < 5):
+                mode.app.colsInput += event.key
+
+    def drawInput(mode, canvas):
+        font = 'Arial 20 bold'
+        mode.counter += 1
+        blinkTime = 15
+        inputX = mode.rowColX + 5
+        if (mode.app.rowsBar and mode.counter%blinkTime < blinkTime//2):
+            canvas.create_text(inputX, mode.rowY+mode.rowColHeight//2, 
+                text=(mode.app.rowsInput + '|'), anchor='w', fill='Black', font=font)
+        canvas.create_text(inputX, mode.rowY+mode.rowColHeight//2, 
+            text=mode.app.rowsInput, anchor='w', fill='Black', font=font)
+        if (mode.app.colsBar and mode.counter%blinkTime < blinkTime//2):
+            canvas.create_text(inputX, mode.colY+mode.rowColHeight//2, 
+                text=(mode.app.colsInput + '|'), anchor='w', fill='Black', font=font)
+        canvas.create_text(inputX, mode.colY+mode.rowColHeight//2, 
+            text=mode.app.colsInput, anchor='w', fill='Black', font=font)
+
     def mousePressed(mode, event):
         for button in mode.buttons:
             nextMode = button.isClicked(event.x, event.y)
@@ -252,10 +300,24 @@ class ImportMainMode(Mode):
                         mode.app.mainImage = Image.open(mainImagePath)
                 elif (button.content == 'Next'):
                     if (mode.app.mainImage):
-                        mode.nextButton.color = 'gray'
+                        if ((not mode.app.rowsInput == '' and not mode.app.colsInput == '') and
+                            (not mode.app.rowsInput.isdigit() or not mode.app.colsInput.isdigit())):
+                            mode.app.showMessage('Please enter integers to Rows/Cols')
+                        if (mode.app.rowsInput == '' and mode.app.colsInput == ''):
+                            mode.nextButton.color = 'gray'
+                        elif (mode.app.rowsInput.isdigit() and mode.app.colsInput.isdigit()):
+                            mode.app.rowCol = (int(mode.app.rowsInput), int(mode.app.colsInput))
+                        elif (mode.app.rowsInput.isdigit() and mode.app.colsInput == ''):
+                            mode.app.rowCol = (int(mode.app.rowsInput), int(mode.app.rowsInput))
+                        elif (mode.app.rowsInput == '' and mode.app.colsInput.isdigit()):
+                            mode.app.rowCol = (int(mode.app.colsInput), int(mode.app.colsInput))
                         mode.app.setActiveMode(nextMode)
                     else:
                         mode.app.showMessage('Please select main image first')
+                elif (button.title == 'rows'): 
+                    mode.app.rowsBar = True
+                elif (button.title == 'cols'):
+                    mode.app.colsBar = True
                 elif (type(button.content) == type(mode.mainImages[0])):
                     mode.app.mainImage = button.content
 
@@ -265,13 +327,22 @@ class ImportMainMode(Mode):
         canvas.create_image(cx, cy, image=mode.app.background)
         canvas.create_text(cx, mode.height*0.1, font='Arial 20 bold', fill='white',
             text='Main Images')
+        canvas.create_rectangle(mode.width*0.05, mode.height*0.65, mode.width*0.33,
+            mode.height*0.9, fill='#404040')
         canvas.create_text(cx, mode.height*0.25, font='Arial 16 bold', fill='white',
             text='Choose Main Image from the Samples Below:')
         canvas.create_text(cx, mode.height*0.6, font='Arial 16 bold', fill='white',
             text='...Or Import from your Computer!')
+        canvas.create_text(mode.width*0.07, mode.height*0.7, font='Arial 16 bold',
+            fill='white', anchor='w', text='Optional Settings:')
+        canvas.create_text(mode.width*0.07, mode.height*0.8, font='Arial 16 bold',
+            fill='white', anchor='w', text='Rows:\n\nCols:')
         for button in mode.buttons:    
             mode.app.drawButton(mode, button, canvas)
-        
+        mode.drawInput(canvas)
+
+
+
 class LoadingMode(Mode):
     def appStarted(mode):
         mode.counter = 1
@@ -283,7 +354,7 @@ class LoadingMode(Mode):
         mode.counter += 1
         #mode.gifCounter = (mode.gifCounter + 1) % len(mode.gifImages)
         if (mode.counter % 10 == 0):
-            mode.app.mosaic = imageMosaicCreator(mode.app.mainImage, mode.app.sampleImages)
+            mode.app.mosaic = imageMosaicCreator(mode.app.mainImage, mode.app.sampleImages, mode.app.rowCol)
             mode.frameWidth, mode.frameHeight = mode.width-80, mode.height-80
             mode.app.mosaicForDisplay = mode.app.frameImage(mode.app.mosaic, (mode.frameWidth, mode.frameHeight))
             mode.app.setActiveMode(mode.app.SaveMode)
@@ -293,16 +364,7 @@ class LoadingMode(Mode):
         canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.background))
         canvas.create_text(cx, cy, text='Loading', font='Georgia 24', fill='white')
 
-'''
-class DisplayMode(Mode):
-    def appStarted(mode):
-        mode.app.mosaic = imageMosaicCreator(mode.mainImage, mode.app.sampleImages)
 
-    def redrawAll(mode, canvas):
-        cx = mode.width//2
-        cy = mode.height//2
-        canvas.create_image(cx, cy, image=ImageTk.PhotoImage(mode.app.mosaic))
-'''
 
 class SaveMode(Mode):
     def appStarted(mode):
@@ -328,12 +390,15 @@ class SaveMode(Mode):
                     savePath = filedialog.asksaveasfile(title='Save file: ', 
                         filetypes=(('jpg File', '*.jpg'), ('png File', '*.png')), 
                         defaultextension=('jpg File', '*.jpg'))
-                    mode.app.mosaic.save(savePath)
+                    if (savePath): mode.app.mosaic.save(savePath)
                 elif (button.content=='Home'):
                     mode.app.sampleImages = None
                     mode.app.mainImage = None 
                     mode.app.mosaic = None
                     mode.app.input = ''
+                    mode.app.rowsInput = mode.app.colsInput = ''
+                    mode.app.rowsBar = mode.app.colsBar = False
+                    mode.app.rowCol = None
                     mode.app.keywordBar = False
                     mode.app.setActiveMode(nextMode)
 
@@ -346,7 +411,7 @@ class SaveMode(Mode):
 
 class Button(object):
     def __init__(self, x1, y1, x2, y2, content='', targetMode=True, buttonType='rectangle', 
-            color='white', font='Arial 20 bold', fill='black', width=1):
+            color='white', font='Arial 20 bold', fill='black', width=1, title=None):
         typeOptions = {'rectangle', 'ellipse', 'hexagon', 'rounded rectangle'}
         self.x1 = x1
         self.y1 = y1
@@ -359,6 +424,7 @@ class Button(object):
         self.font = font
         self.fill = fill
         self.width = width
+        self.title = title
         self.rx = (x2 - x1)//2
         self.ry = (y2 - y1)//2
         self.cx = x1 + self.rx
@@ -384,7 +450,6 @@ class PhotoMosaicApp(ModalApp):
         app.HelpMode = HelpMode()
         app.SelectionMode = SelectionMode()
         app.ImportSamplesMode = ImportSamplesMode()
-        app.ImportVideoSamplesMode = ImportVideoSamplesMode()
         app.ImportMainMode = ImportMainMode()
         app.LoadingMode = LoadingMode()
         app.SaveMode = SaveMode()
@@ -428,17 +493,6 @@ class PhotoMosaicApp(ModalApp):
             y+(height//2), buttonTexts[i], buttonDestinations[i], shape, color)
             result.append(button)
         return result
-    ''' Don't really use right now
-    @staticmethod
-    def createButtonsWithFixedX(app, buttonTexts, buttonDestinations, x, yStart, yEnd, height=80, width=100, shape='rectangle', color='white'):
-        cellHeight = ((yEnd-yStart)//(1 + len(buttonTexts)))
-        result = []
-        for i in range(len(buttonTexts)):
-            button = Button(x-(width//2), yStart+cellHeight*(i+1)-(height//2), x+(width//2),
-                yStart+cellHeight*(i+1)+(height//2), buttonTexts[i], buttonDestinations[i], shape, color)
-            result.append(button)
-        return result
-    '''
 
     # The GIF in GIF List is an instance of Tkinter Image
     @staticmethod
