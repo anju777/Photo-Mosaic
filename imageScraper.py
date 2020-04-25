@@ -24,13 +24,7 @@ def keywordImageRetriever(keyword, n=300):
         return imageList
     htmlList = retrieveHtmlsFromGoogleImage(keyword)
     imageUrls = retrieveImageUrlsFromList(htmlList)
-    imageList = convertUrlsToImagesAndSave(imageUrls, numThread
-    
-def convertUrlToImage(imageUrl):
-    # Citation: Below 2 lines taken from loadImage() of cmu_112_graphics.py
-    # Downloaded from: https://www.cs.cmu.edu/~112/notes/cmu_112_graphics.py
-    response = requests.request('GET', imageUrl)
-    return Image.open(BytesIO(response.content)), path)
+    imageList = convertUrlsToImagesAndSave(imageUrls, numThread, path)
     return imageList
 ##############################################################################
 
