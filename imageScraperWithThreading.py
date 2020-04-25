@@ -16,7 +16,7 @@ from selenium.webdriver import Chrome
 
 ############################## MAIN FUNCTIONS #################################
 def keywordImageRetriever(keyword, n=300):
-    numThreads = 30
+    numThread = 50
     keywordDirectory = modifyKeywordForDirectory(keyword)
     path = f'C:/Users/anjua/OneDrive/Desktop/Photo-Mosaic/SampleImages/{keywordDirectory}'
     if (os.path.exists(path) and ((len(os.listdir(path)) + 50) > n)):
@@ -24,7 +24,13 @@ def keywordImageRetriever(keyword, n=300):
         return imageList
     htmlList = retrieveHtmlsFromGoogleImage(keyword)
     imageUrls = retrieveImageUrlsFromList(htmlList)
-    imageList = convertUrlsToImagesAndSave(imageUrls, numThreads, path)
+    imageList = convertUrlsToImagesAndSave(imageUrls, numThread
+    
+def convertUrlToImage(imageUrl):
+    # Citation: Below 2 lines taken from loadImage() of cmu_112_graphics.py
+    # Downloaded from: https://www.cs.cmu.edu/~112/notes/cmu_112_graphics.py
+    response = requests.request('GET', imageUrl)
+    return Image.open(BytesIO(response.content)), path)
     return imageList
 ##############################################################################
 
@@ -162,7 +168,6 @@ def convertUrlsToImagesAndSave(imageUrls, numThread, path):
     i = -1
     if (not os.path.exists(path)): # creates folder to save images if not exist
         os.mkdir(path)
-
     for imageUrl in imageUrls:
         q.put(imageUrl)
 
@@ -179,7 +184,6 @@ def convertUrlsToImagesAndSave(imageUrls, numThread, path):
         thread = threading.Thread(target=imageToThreadThreader, args=[imageList, path]) 
         thread.start()
         threads.append(thread)
-
     for thread in threads:
         thread.join()
 
@@ -197,16 +201,11 @@ def AddImageUrlToListAndSave(imageUrl, i, imageList, path, fileFormat='jpg'):
     with imageList_lock:
         imageList.append(Image.open(imgPath))
 
-# Citation: https://www.youtube.com/watch?v=IEEhzQoKtQU&t=1089s
-# Below code to download image from above YouTube URL
-'''
-def download_image(img_url):
-    img_bytes = requests.get(img_url).content
-    img_name = f'{keyword}{i}.jpg #something with locks here for i
-    with open(img_name, 'wb') as file:
-        file.write(img_bytes)
-        print(f'{img_name} downloaded...')
-'''
+def convertUrlToImage(imageUrl):
+    # Citation: Below 2 lines taken from loadImage() of cmu_112_graphics.py
+    # Downloaded from: https://www.cs.cmu.edu/~112/notes/cmu_112_graphics.py
+    response = requests.request('GET', imageUrl)
+    return Image.open(BytesIO(response.content))
 ##############################################################################
 
 ############################### SaveImageList ################################
