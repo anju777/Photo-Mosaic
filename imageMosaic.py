@@ -111,11 +111,13 @@ class SelectionMode(Mode):
 
 class ImportSamplesMode(Mode):
     def appStarted(mode):
-        mode.app.input = ''
         mode.createButtons()
+
+    def modeActivated(mode):
+        mode.app.input = ''
         mode.app.keywordBar = False
-        mode.sampleImages = None
         mode.counter = 1
+        mode.nextButton.color = 'gray'
 
     def createButtons(mode):
         mode.keywordMargin = 150
@@ -153,7 +155,6 @@ class ImportSamplesMode(Mode):
                         mode.app.sampleImages = retrieveImagesFromFile(mode.app.sampleImagesFile)
                 elif (button.content == 'Next'):
                     if (mode.app.sampleImages):
-                        mode.nextButton.color = 'gray'
                         mode.app.setActiveMode(nextMode)
                     else:
                         mode.app.showMessage('Please import sample images first')
@@ -200,9 +201,10 @@ class ImportMainMode(Mode):
         mode.main1 = convertUrlToImage('https://i.pinimg.com/originals/54/a0/8f/54a08f440ac87229c787c4a7d4d7c2e1.jpg')
         mode.main2 = convertUrlToImage('https://i.pinimg.com/originals/99/28/73/9928737a3504c5fc8269377d8ba5a122.jpg')
         mode.main3 = convertUrlToImage('https://1.bp.blogspot.com/-lMg-uRzjXXQ/VWUVykvi6jI/AAAAAAAAAUA/SyND9ucVWU8/s1600/High%2BResolution%2BSpace%2BWallpaper.jpg')
-
         mode.mainImages = [mode.main1, mode.main2, mode.main3]
         mode.createButtons()
+
+    def modeActivated(mode):
         mode.app.rowsInput = mode.app.colsInput = ''
         mode.app.rowsBar = mode.app.colsBar = False
         mode.app.rowCol = None
@@ -372,6 +374,11 @@ class SaveMode(Mode):
         mode.buttonHeight = 40
         mode.createButtons()
     
+    def modeDeactivated(mode):
+        mode.app.sampleImages = None
+        mode.app.mainImage = None 
+        mode.app.mosaic = None
+
     def createButtons(mode):
         margin = 10
         saveButton = Button(mode.width*0.3-mode.buttonWidth//2, mode.height*0.9-mode.buttonHeight//2, 
@@ -392,14 +399,6 @@ class SaveMode(Mode):
                         defaultextension=('jpg File', '*.jpg'))
                     if (savePath): mode.app.mosaic.save(savePath)
                 elif (button.content=='Home'):
-                    mode.app.sampleImages = None
-                    mode.app.mainImage = None 
-                    mode.app.mosaic = None
-                    mode.app.input = ''
-                    mode.app.rowsInput = mode.app.colsInput = ''
-                    mode.app.rowsBar = mode.app.colsBar = False
-                    mode.app.rowCol = None
-                    mode.app.keywordBar = False
                     mode.app.setActiveMode(nextMode)
 
     def redrawAll(mode, canvas):
