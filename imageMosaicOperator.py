@@ -6,7 +6,7 @@
 
 from cmu_112_graphics import *
 from PIL import Image, ImageColor
-from imageScraper import keywordImageRetriever, convertUrlToImage
+from imageScraper import convertUrlToImage
 from io import BytesIO
 
 ####################### Sample Images (Remove Later) ########################

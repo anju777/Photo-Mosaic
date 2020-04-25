@@ -16,6 +16,7 @@ from selenium.webdriver import Chrome
 
 ############################## MAIN FUNCTIONS #################################
 def keywordImageRetriever(keyword, n=300):
+    numThreads = 30
     keywordDirectory = modifyKeywordForDirectory(keyword)
     path = f'C:/Users/anjua/OneDrive/Desktop/Photo-Mosaic/SampleImages/{keywordDirectory}'
     if (os.path.exists(path) and ((len(os.listdir(path)) + 50) > n)):
@@ -23,11 +24,17 @@ def keywordImageRetriever(keyword, n=300):
         return imageList
     htmlList = retrieveHtmlsFromGoogleImage(keyword)
     imageUrls = retrieveImageUrlsFromList(htmlList)
-    imageList = convertUrlsToImages(imageUrls)
-    imageList.pop(0)
-    saveImageList(imageList, path)
+    imageList = convertUrlsToImagesAndSave(imageUrls, numThreads, path)
     return imageList
 ##############################################################################
+
+######################## Global Variables (for threading) ####################
+
+# Lock prevents List/variable from being edited at once
+htmlList_lock = threading.Lock() 
+i_lock = threading.Lock()
+imageList_lock = threading.Lock()
+###############################################################################
 
 ########################## modifyKeywordForDirectory #########################
 def modifyKeywordForDirectory(keyword):
@@ -42,15 +49,12 @@ def modifyKeywordForDirectory(keyword):
     return keyword
 ##############################################################################
 
-# Global lock so htmlList is not edited at once
-htmlList_lock = threading.Lock()
-
 ######################## retrieveHtmlsFromGoogleImage ########################
 # Use Selenium to search Google Image for keyword, and returns HTML of that page
 def retrieveHtmlsFromGoogleImage(keyword, n=''):
     threads = []
     htmlList = []
-    for n in range(13):
+    for n in range(13): # 13 is number of color filters + original page on Google Image
         if (n == 0): thread = threading.Thread(target=retrieveHtmlOfNormalImages,
             args=[keyword, htmlList])
         else: thread = threading.Thread(target=retrieveHtmlOfColorFilteredImages,
@@ -90,9 +94,9 @@ def retrieveHtmlOfColorFilteredImages(keyword, n, htmlList): # max of n is 12 (1
         
         ### color selection: runs if there is any input for n
         driver.find_element_by_class_name('PNyWAd.ZXJQ7c').click() # Clicks on Tool
-        time.sleep(1)
+        time.sleep(0.3)
         driver.find_element_by_xpath("//div[@class='D0HoIc itb-h']/div[2]/div[1]/div[1]").click() # Clicks on Color Option
-        time.sleep(1)
+        time.sleep(0.3)
         if (n == 0): driver.find_element_by_class_name("sE24ib").click()
         else: driver.find_element_by_xpath(f"//div[@class='Ix6LGe']/div[1]/a[{n}]/div[1]/div[1]").click()                
         time.sleep(0.2)
@@ -125,6 +129,7 @@ def scrollDown(driver, startOffset=0, n=35, webSize=1080):
         driver.execute_script(f"window.scrollTo({start},{start + webSize});") 
         time.sleep(0.1)
     return start + webSize
+##############################################################################
 
 ########################### retrieveImageUrlsFromList ########################
 # Takes in list of html link and takes out all the image links inside
@@ -138,28 +143,70 @@ def retrieveImageUrlsFromList(htmlList):
 def retrieveImageUrlsFromHtml(html):
     imageUrls = []
     html = bs.BeautifulSoup(html, 'lxml')
-    for imageTag in html.find_all('img'):
-        imageLink = imageTag.get('src')
+    imgElems = html.find_all('img')
+    for i in range(len(imgElems)):
+        if (i == 0): continue
+        imageLink = imgElems[i].get('src')
         if (imageLink and imageLink.startswith('http')): 
             # not empty string and not one of Google's stored image
             imageUrls.append(imageLink)
     return imageUrls
 ##############################################################################
 
-############################## convertUrlsToImages ###########################
+############################ convertUrlsToImagesAndSave #######################
 # Takes in a list of imageLinks and returns new list with Image objects of url
-def convertUrlsToImages(imageUrls):
+def convertUrlsToImagesAndSave(imageUrls, numThread, path):
+    q = Queue()
     imageList = []
+    threads = []
+    i = -1
+    if (not os.path.exists(path)): # creates folder to save images if not exist
+        os.mkdir(path)
+
     for imageUrl in imageUrls:
-        image = convertUrlToImage(imageUrl)
-        imageList.append(image)
+        q.put(imageUrl)
+
+    def imageToThreadThreader(imageList, path):
+        while not q.empty():
+            with i_lock: 
+                nonlocal i
+                i += 1
+            imageUrl = q.get()
+            AddImageUrlToListAndSave(imageUrl, i, imageList, path)
+            q.task_done()
+
+    for i in range(numThread):
+        thread = threading.Thread(target=imageToThreadThreader, args=[imageList, path]) 
+        thread.start()
+        threads.append(thread)
+
+    for thread in threads:
+        thread.join()
+
     return imageList
 
-def convertUrlToImage(imageUrl):
-    # Citation: Below 2 lines taken from loadImage() of cmu_112_graphics.py
-    # Downloaded from: https://www.cs.cmu.edu/~112/notes/cmu_112_graphics.py
+def AddImageUrlToListAndSave(imageUrl, i, imageList, path, fileFormat='jpg'):
     response = requests.request('GET', imageUrl)
-    return Image.open(BytesIO(response.content))
+    # Adds appropriate extension to image file
+    if (path.count('\\') > 0):
+        imgPath = (f'{path}\\image{i}.{fileFormat}')
+    else:
+        imgPath = (f'{path}/image{i}.{fileFormat}')
+    with open(imgPath, 'wb') as file:
+        file.write(response.content) # response.content is in bytes
+    with imageList_lock:
+        imageList.append(Image.open(imgPath))
+
+# Citation: https://www.youtube.com/watch?v=IEEhzQoKtQU&t=1089s
+# Below code to download image from above YouTube URL
+'''
+def download_image(img_url):
+    img_bytes = requests.get(img_url).content
+    img_name = f'{keyword}{i}.jpg #something with locks here for i
+    with open(img_name, 'wb') as file:
+        file.write(img_bytes)
+        print(f'{img_name} downloaded...')
+'''
 ##############################################################################
 
 ############################### SaveImageList ################################

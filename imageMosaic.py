@@ -2,7 +2,8 @@
 # Term Project 15-112: Photo Mosaic
 
 from cmu_112_graphics import *
-from imageScraper import keywordImageRetriever, convertUrlToImage, retrieveImagesFromFile
+from imageScraper import convertUrlToImage, retrieveImagesFromFile
+from imageScraperWithThreading import keywordImageRetriever
 from imageMosaicOperator import imageMosaicCreator
 
 # Sample Main Images from: 
