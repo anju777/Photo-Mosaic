@@ -8,7 +8,7 @@ from cmu_112_graphics import *
 from PIL import Image, ImageColor
 from imageScraper import convertUrlToImage
 from io import BytesIO
-
+'hello. Editing on numpy right'
 ####################### Sample Images (Remove Later) ########################
 fileName = "Nagahama_Neru"
 imgPath = f"C:\\Users\\anjua\\OneDrive\\Pictures\\15112_TP\\{fileName}.jpg"
