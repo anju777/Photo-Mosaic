@@ -51,7 +51,7 @@ def imageMosaicCreator(mainImage, sampleImages, rowCol=None):
 
 # Takes in image and ratio (default = 4:3), and returns rows/cols that would
 # be optimal to split the image into
-def obtainRowsCols(image, ratio=(4, 3), minLength=20):
+def obtainRowsCols(image, ratio=(4, 3), minLength=30):
     base = min(ratio)
     multiplier = minLength / base
     ratio = multiplyElement(ratio, multiplier)

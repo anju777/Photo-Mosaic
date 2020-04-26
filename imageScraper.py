@@ -16,7 +16,7 @@ from selenium.webdriver import Chrome
 
 ############################## MAIN FUNCTIONS #################################
 def keywordImageRetriever(keyword, n=300):
-    numThread = 50
+    numThread = 200
     keywordDirectory = modifyKeywordForDirectory(keyword)
     path = f'C:/Users/anjua/OneDrive/Desktop/Photo-Mosaic/SampleImages/{keywordDirectory}'
     if (os.path.exists(path) and ((len(os.listdir(path)) + 50) > n)):
@@ -112,11 +112,12 @@ def getHtmlOfGoogleImagePage(driver):
     # Scrolls down so that more image is loaded for use
     endLocation = scrollDown(driver)
     time.sleep(0.5)
-    # Returns list of length 1
+    '''
+    # Returns list of length 1 so need to index
     loadMoreButton = driver.find_elements_by_class_name('mye4qd')
     loadMoreButton[0].click()
     time.sleep(0.5)
-    scrollDown(driver, endLocation)
+    scrollDown(driver, endLocation)'''
     html = driver.page_source
     return html
 
