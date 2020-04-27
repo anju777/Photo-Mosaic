@@ -9,6 +9,7 @@ from PIL import Image, ImageColor
 from imageScraper import convertUrlToImage
 from io import BytesIO
 import numpy as np
+import time
 
 ####################### Sample Images (Remove Later) ########################
 fileName = "Nagahama_Neru"
@@ -26,7 +27,7 @@ image3 = Image.open(imgPath)
 
 ############################### MAIN FUNCTION ###############################
 # Takes in an image object, and returns the image mosaic
-def imageMosaicCreator(mainImage, sampleImages, rowCol=None):
+def imageMosaicCreator(mainImage, sampleImages, keywordDirectory=None, rowCol=None, path=None):
     # Allows function to take in imageUrl as mainImage as well
     if (isinstance(mainImage, str) and mainImage.startswith('http')):
         mainImage = convertUrlToImage(mainImage)
@@ -34,21 +35,39 @@ def imageMosaicCreator(mainImage, sampleImages, rowCol=None):
         rows, cols = obtainRowsCols(mainImage)
     elif (isinstance(rowCol, tuple)):
         rows, cols = rowCol
+    if (keywordDirectory): 
+        path = f'C:/Users/anjua/OneDrive/Desktop/Photo-Mosaic/SampleImages/{keywordDirectory}/rgbSamples.csv'
+    start = time.perf_counter()
+    print('Starting sample image sizing...', end='')
     sampleImages = sizeSampleImages(sampleImages, mainImage, rows, cols)
-    sampleImagesRGB = getListOfRGBValues(sampleImages)
+    end = time.perf_counter()
+    print(f'Finished in {end-start} seconds')
+    if (path and os.path.exists(path)): sampleImagesRGB = retrieveSamples(path)
+    else: sampleImagesRGB = getListOfRGBValuesAndSave(sampleImages, path)
     griddedImages = gridImage(mainImage, rows, cols)
-    avgRGBMain = getAverageRGB(mainImage)
+    avgRGBMain = tuple(getAverageRGB(mainImage).tolist())
 
     for row in range(rows):
+        start = time.perf_counter()
+        print('Starting 1 row...', end='')
         for col in range(cols):
-            avgRGB = getAverageRGB(griddedImages[row][col])
+            avgRGB = getRGBGridded(griddedImages[row][col])
             indexOfSampleImage = findClosestRGB(avgRGB, sampleImagesRGB)
             sampleImage = sampleImages[indexOfSampleImage]
             griddedImages[row][col] = sampleImage
+        end = time.perf_counter()
+        print(f'Finished in {end-start} seconds')
 
+    start = time.perf_counter()
+    print('Combining grids into original image...', end='')
     result = convertGridsToOriginal(griddedImages, avgRGBMain)
+    end = time.perf_counter()
+    print(f'Finished in {end-start} seconds')
     return result
 #############################################################################
+def retrieveSamples(path):
+    result = np.genfromtxt(path, delimiter=',')
+    return result
 
 # Takes in image and ratio (default = 4:3), and returns rows/cols that would
 # be optimal to split the image into
@@ -86,12 +105,26 @@ def sizeImage(image, mainImage, rows, cols):
 
 # Takes in list of images and returns list (same len) of tuples containing RGB
 # values of each elements
-def getListOfRGBValues(imageList):
-    RGBList = []
+def getListOfRGBValuesAndSave(imageList, path=None):
+    first, second = True, False
     for image in imageList:
-        RGBValue = getAverageRGB(image)
-        RGBList.append(RGBValue)
+        RGBValue = getRGBGridded(image)
+        if (first):
+            RGBList = RGBValue
+            first, second = False, True
+        elif (second):
+            RGBList = np.array([RGBList, RGBValue])
+            second = False
+        else:
+            RGBList = np.append(RGBList, [RGBValue], axis=0)
+    if (path):
+        saveRGBValues(RGBList, path)
     return RGBList
+
+def saveRGBValues(RGBValue, path):
+    # Citation: delimiter and saving format taken from below URL:
+    # https://thispointer.com/how-to-save-numpy-array-to-a-csv-file-using-numpy-savetxt-in-python/
+    np.savetxt(path, RGBValue, delimiter=',', fmt='%d')
 
 # Takes in an image and returns a 2D list of the image with indicated rows/cols
 def gridImage(image, rows, cols):
@@ -107,15 +140,22 @@ def gridImage(image, rows, cols):
     return result
 
 def getRGBGridded(image, rows=3, cols=3):
-    griddedImages = gridImage(mainImage, rows, cols)
-    result = np.zeros((rows, cols))
+    griddedImages = gridImage(image, rows, cols)
+    first = True
     for row in range(rows):
         for col in range(cols):
             grid = griddedImages[row][col]
-            avgRGB = 
+            avgRGB = getAverageRGB(grid)
+            index = row*3 + col
+            if (first):
+                result = avgRGB
+                first = False
+            else:
+                result = np.append(result, avgRGB)
+    return result
 
 ############################# getAverageRGB #################################
-# Takes in an image object and returns a tuple of the average RGB of the image
+# Takes in an image object and returns a np of the average RGB of the image
 def getAverageRGB(image):
     # Modifies image so that it can be represented with 256 (limited) colors
     image = image.quantize()
@@ -199,19 +239,16 @@ def divideElement(L, divisor, mode='int', target=list()):
 # Takes in target RGB (tuple) and list of RGB Values (tuples), and returns 
 # the indexof the RGB value in the list closest to the target 
 def findClosestRGB(targetRGB, RGBList):
-    smallestDifference = None
-    closestIndex = None
-    targetRed, targetGreen, targetBlue = targetRGB
-    for i in range(len(RGBList)):
-        red, green, blue= RGBList[i]
-        redDifference = abs(targetRed - red)
-        greenDifference = abs(targetGreen - green)
-        blueDifference = abs(targetBlue - blue)
-        avgDifference = (redDifference + greenDifference + blueDifference)/3
-        if (smallestDifference == None or avgDifference < smallestDifference):
-            smallestDifference = avgDifference
-            closestIndex = i
-    return closestIndex
+    start = time.perf_counter()
+    difference = np.subtract(RGBList, targetRGB)
+    end = time.perf_counter()
+    print(f'subtracting took {end-start} seconds')
+    difference = abs(difference)
+    differenceSum = np.sum(difference, axis=1) # sums all rows and returns as array
+    # Use of .where modeified version from:
+    # https://thispointer.com/numpy-amin-find-minimum-value-in-numpy-array-and-its-index/
+    minIndex = np.where(differenceSum == np.amin(differenceSum))
+    return minIndex[0][0]
 
 # Takes in 2D list containing image objects, and returns the images put together
 # Note: all sizes of images in the griddedImages must be the same

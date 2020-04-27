@@ -356,7 +356,8 @@ class LoadingMode(Mode):
         mode.counter += 1
         #mode.gifCounter = (mode.gifCounter + 1) % len(mode.gifImages)
         if (mode.counter % 10 == 0):
-            mode.app.mosaic = imageMosaicCreator(mode.app.mainImage, mode.app.sampleImages, mode.app.rowCol)
+            mode.app.mosaic = imageMosaicCreator(mode.app.mainImage, 
+                mode.app.sampleImages, keywordDirectory=mode.app.input, rowCol=mode.app.rowCol)
             mode.frameWidth, mode.frameHeight = mode.width-80, mode.height-80
             mode.app.mosaicForDisplay = mode.app.frameImage(mode.app.mosaic, (mode.frameWidth, mode.frameHeight))
             mode.app.setActiveMode(mode.app.SaveMode)
@@ -453,7 +454,8 @@ class PhotoMosaicApp(ModalApp):
         app.LoadingMode = LoadingMode()
         app.SaveMode = SaveMode()
         
-        # Citation: Background Image taken from below URL
+        # Citation: B
+        # ackground Image taken from below URL
         app.background = 'https://static.independent.co.uk/s3fs-public/thumbnails/image/2019/03/22/16/istock-644053990.jpg?w968h681'
         app.background = ImageTk.PhotoImage(convertUrlToImage(app.background))
         app.sampleImages = None

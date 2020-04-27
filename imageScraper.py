@@ -224,6 +224,8 @@ def retrieveImagesFromFile(path):
     else:
         imageList = []
         for item in os.listdir(path):
+            if (item.endswith('.csv')):
+                continue
             if (path.count('\\') > 0 and not path.endswith('\\')):
                 innerPath = f'{path}\\{item}'
             elif (not path.endswith('/')):
