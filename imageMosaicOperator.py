@@ -8,7 +8,8 @@ from cmu_112_graphics import *
 from PIL import Image, ImageColor
 from imageScraper import convertUrlToImage
 from io import BytesIO
-'hello. Editing on numpy right'
+import numpy as np
+
 ####################### Sample Images (Remove Later) ########################
 fileName = "Nagahama_Neru"
 imgPath = f"C:\\Users\\anjua\\OneDrive\\Pictures\\15112_TP\\{fileName}.jpg"
@@ -105,36 +106,43 @@ def gridImage(image, rows, cols):
             result[row].append(grid)
     return result
 
+def getRGBGridded(image, rows=3, cols=3):
+    griddedImages = gridImage(mainImage, rows, cols)
+    result = np.zeros((rows, cols))
+    for row in range(rows):
+        for col in range(cols):
+            grid = griddedImages[row][col]
+            avgRGB = 
+
 ############################# getAverageRGB #################################
 # Takes in an image object and returns a tuple of the average RGB of the image
 def getAverageRGB(image):
-    # Modifies image so that it can be represented with 256 colors
+    # Modifies image so that it can be represented with 256 (limited) colors
     image = image.quantize()
-    colorList = image.getcolors()
-    colorPalette = image.getpalette()
+    colorList = np.array(image.getcolors()) # 2D Array: count, palette number
+    colorPalette = np.array(image.getpalette()) # Array of RGB w/o separation
     colorList = combineListAndPalette(colorList, colorPalette)
-    avgRGB = [0, 0, 0]
-
-    # Takes sum of all individual colors in that image
-    for count, RGBValue in colorList:
-        for i in range(len(RGBValue)):
-            avgRGB[i] += (RGBValue[i]*count)
-    # Divides each element by total number of pixels to obtain average
+    multiplier = np.array([colorList[:, 0]]).transpose()
+    rgbValues = np.stack(colorList[:, 1])
+    # Multiplies all elements by  count, adds them up, and divides to take avg
+    result = np.multiply(multiplier, rgbValues) 
+    result = np.sum(result.T, axis=-1) 
     pixelCount = image.width * image.height
-    avgRGB = divideElement(avgRGB, pixelCount, 'int', tuple())
-    return avgRGB 
+    #avgRGB = np.divide(result, pixelCount, dtype=int)
+    avgRGB = result // pixelCount
+    return avgRGB
 
 # Takes in colorCount (list of (count, paletteNumber)) & palette (list of RGB 
 # values without categorization. Returns new list as (count, (RGB Value))
 def combineListAndPalette(colorList, colorPalette):
-    for i in range(len(colorList)):
-        count = colorList[i][0]
-        paletteNumber = colorList[i][1]
-        redIndex = paletteNumber*3
-        RGBList = colorPalette[redIndex:redIndex + 3]
-        RGBTuple = tuple(RGBList)
-        colorList[i] = (count, RGBTuple)        
-    return colorList
+    countList = colorList[:, 0]
+    paletteNum = colorList[:, 1]
+    colorPalette = np.array(np.split(colorPalette, len(colorPalette)//3))
+    result = np.array([[countList[0], colorPalette[paletteNum[0]]]])
+    for i in range(1, len(colorList)):
+        row = np.array([[countList[i], colorPalette[paletteNum[i]]]])
+        result = np.concatenate((result, row))
+    return result   #2D matrix in numpy
 
 # Takes in set/list/tuple and returns with each element multiplied by multiplier
 #   Default return type is lists and normal multipliacation, but can specify
