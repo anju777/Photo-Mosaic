@@ -167,6 +167,7 @@ class ImportSamplesMode(Mode):
                 mode.app.input = mode.app.input[:-1]
             elif (event.key == 'Enter'):
                 mode.app.sampleImages = keywordImageRetriever(mode.app.input)
+                mode.app.keywordBar = False
             elif (len(event.key) == 1):
                 mode.app.input += event.key
 
@@ -329,8 +330,8 @@ class ImportMainMode(Mode):
         canvas.create_image(cx, cy, image=mode.app.background)
         canvas.create_text(cx, mode.height*0.1, font='Arial 20 bold', fill='white',
             text='Main Images')
-        canvas.create_rectangle(mode.width*0.05, mode.height*0.65, mode.width*0.33,
-            mode.height*0.9, fill='#404040')
+        canvas.create_rectangle(mode.width*0.05, mode.height*0.65, mode.width*0.35,
+            mode.height*0.95, fill='#404040')
         canvas.create_text(cx, mode.height*0.25, font='Arial 16 bold', fill='white',
             text='Choose Main Image from the Samples Below:')
         canvas.create_text(cx, mode.height*0.6, font='Arial 16 bold', fill='white',
@@ -339,6 +340,10 @@ class ImportMainMode(Mode):
             fill='white', anchor='w', text='Optional Settings:')
         canvas.create_text(mode.width*0.07, mode.height*0.8, font='Arial 16 bold',
             fill='white', anchor='w', text='Rows:\n\nCols:')
+        canvas.create_line(mode.width*0.07, mode.height*0.89, mode.width*0.33, mode.height*0.89,
+            fill='white', width=3)
+        canvas.create_text(mode.width*0.07, mode.height*0.92, font='Arial 12 bold',
+            fill='white', anchor='w', text = 'Basic\t\t Detailed')
         for button in mode.buttons:    
             mode.app.drawButton(mode, button, canvas)
         mode.drawInput(canvas)

@@ -37,11 +37,7 @@ def imageMosaicCreator(mainImage, sampleImages, keywordDirectory=None, rowCol=No
         rows, cols = rowCol
     if (keywordDirectory): 
         path = f'C:/Users/anjua/OneDrive/Desktop/Photo-Mosaic/SampleImages/{keywordDirectory}/rgbSamples.csv'
-    start = time.perf_counter()
-    print('Starting sample image sizing...', end='')
     sampleImages = sizeSampleImages(sampleImages, mainImage, rows, cols)
-    end = time.perf_counter()
-    print(f'Finished in {end-start} seconds')
     if (path and os.path.exists(path)): sampleImagesRGB = retrieveSamples(path)
     else: sampleImagesRGB = getListOfRGBValuesAndSave(sampleImages, path)
     griddedImages = gridImage(mainImage, rows, cols)
@@ -49,20 +45,15 @@ def imageMosaicCreator(mainImage, sampleImages, keywordDirectory=None, rowCol=No
 
     for row in range(rows):
         start = time.perf_counter()
-        print('Starting 1 row...', end='')
         for col in range(cols):
             avgRGB = getRGBGridded(griddedImages[row][col])
             indexOfSampleImage = findClosestRGB(avgRGB, sampleImagesRGB)
             sampleImage = sampleImages[indexOfSampleImage]
             griddedImages[row][col] = sampleImage
         end = time.perf_counter()
-        print(f'Finished in {end-start} seconds')
+        print(f'Finished {row} out of {rows} rows in {end-start} seconds.')
 
-    start = time.perf_counter()
-    print('Combining grids into original image...', end='')
     result = convertGridsToOriginal(griddedImages, avgRGBMain)
-    end = time.perf_counter()
-    print(f'Finished in {end-start} seconds')
     return result
 #############################################################################
 def retrieveSamples(path):
@@ -239,10 +230,7 @@ def divideElement(L, divisor, mode='int', target=list()):
 # Takes in target RGB (tuple) and list of RGB Values (tuples), and returns 
 # the indexof the RGB value in the list closest to the target 
 def findClosestRGB(targetRGB, RGBList):
-    start = time.perf_counter()
     difference = np.subtract(RGBList, targetRGB)
-    end = time.perf_counter()
-    print(f'subtracting took {end-start} seconds')
     difference = abs(difference)
     differenceSum = np.sum(difference, axis=1) # sums all rows and returns as array
     # Use of .where modeified version from:

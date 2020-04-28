@@ -5,7 +5,6 @@ import bs4 as bs
 from PIL import Image
 from io import BytesIO
 import threading
-import time
 from queue import Queue
 
 from selenium.webdriver.common.keys import Keys
