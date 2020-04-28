@@ -217,11 +217,13 @@ def saveImageList(imageList, path, fileFormat='jpg'):
 
 ########################### retrieveImagesFromFile ###########################
 def retrieveImagesFromFile(path):
+    imageList = []
     if os.path.isfile(path):
         if (path.lower().endswith('jpg') or path.lower().endswith('png')):
-            return [Image.open(path)]
+            fileName = path.split('/')[-1]
+            if (not fileName.startswith('.') and not fileName.startswith('_')):
+                return [Image.open(path)]
     else:
-        imageList = []
         for item in os.listdir(path):
             if (item.endswith('.csv')):
                 continue
