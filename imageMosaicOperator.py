@@ -27,26 +27,26 @@ image3 = Image.open(imgPath)
 
 ############################### MAIN FUNCTION ###############################
 # Takes in an image object, and returns the image mosaic
-def imageMosaicCreator(mainImage, sampleImages, keywordDirectory=None, rowCol=None, path=None):
+def imageMosaicCreator(mainImage, sampleImages, keywordDirectory=None, rowCol=None, path=None, analysisLevel=3):
     # Allows function to take in imageUrl as mainImage as well
     if (isinstance(mainImage, str) and mainImage.startswith('http')):
         mainImage = convertUrlToImage(mainImage)
-    if (rowCol == None):
-        rows, cols = obtainRowsCols(mainImage)
-    elif (isinstance(rowCol, tuple)):
-        rows, cols = rowCol
+    analysisRows = analysisCols = analysisLevel
+    # Obtains proper rowCol value for mosaic grid
+    if (rowCol == None): rows, cols = obtainRowsCols(mainImage)
+    elif (isinstance(rowCol, tuple)): rows, cols = rowCol
     if (keywordDirectory): 
-        path = f'C:/Users/anjua/OneDrive/Desktop/Photo-Mosaic/SampleImages/{keywordDirectory}/rgbSamples.csv'
+        path = f'C:/Users/anjua/OneDrive/Desktop/Photo-Mosaic/SampleImages/{keywordDirectory}/rgbSamples{analysisRows}x{analysisCols}.csv'
     sampleImages = sizeSampleImages(sampleImages, mainImage, rows, cols)
     if (path and os.path.exists(path)): sampleImagesRGB = retrieveSamples(path)
-    else: sampleImagesRGB = getListOfRGBValuesAndSave(sampleImages, path)
+    else: sampleImagesRGB = getListOfRGBValuesAndSave(sampleImages, path=path, rows=analysisRows, cols=analysisCols)
     griddedImages = gridImage(mainImage, rows, cols)
     avgRGBMain = tuple(getAverageRGB(mainImage).tolist())
 
     for row in range(rows):
         start = time.perf_counter()
         for col in range(cols):
-            avgRGB = getRGBGridded(griddedImages[row][col])
+            avgRGB = getRGBGridded(griddedImages[row][col], rows=analysisRows, cols=analysisCols)
             indexOfSampleImage = findClosestRGB(avgRGB, sampleImagesRGB)
             sampleImage = sampleImages[indexOfSampleImage]
             griddedImages[row][col] = sampleImage
@@ -62,7 +62,7 @@ def retrieveSamples(path):
 
 # Takes in image and ratio (default = 4:3), and returns rows/cols that would
 # be optimal to split the image into
-def obtainRowsCols(image, ratio=(4, 3), minLength=30):
+def obtainRowsCols(image, ratio=(4, 3), minLength=50):
     base = min(ratio)
     multiplier = minLength / base
     ratio = multiplyElement(ratio, multiplier)
@@ -96,10 +96,10 @@ def sizeImage(image, mainImage, rows, cols):
 
 # Takes in list of images and returns list (same len) of tuples containing RGB
 # values of each elements
-def getListOfRGBValuesAndSave(imageList, path=None):
+def getListOfRGBValuesAndSave(imageList, path=None, rows=3, cols=3):
     first, second = True, False
     for image in imageList:
-        RGBValue = getRGBGridded(image)
+        RGBValue = getRGBGridded(image, rows, cols)
         if (first):
             RGBList = RGBValue
             first, second = False, True

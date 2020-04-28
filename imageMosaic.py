@@ -46,14 +46,25 @@ class HelpMode(Mode):
         mode.margin = 30
         mode.font = 'Arial 12'
         mode.text = '''Welcome to the Photo Mosaic Creator!\n\n
-Here you can create photo mosaics based on keyword input or by importing your own images and videos.
+Here, you can create photo mosaics based on keyword input or by importing your own images and videos.
 The basic features and their descriptions are listed below. Enjoy!
 
+
 - Keyword Feature: Takes in keyword and imports images from the Internet to use.
+              * Uses Selenium and incorporated threads so multiple folders can open at the same time ^^
+
 - Import: Can import folder from your computer with all your favorite photos!
-              * The imported photo can have multiple files inside, and skips non-image files!
-\n\n\n\n\n
-\t\t\t***Press any key to return***
+              * The imported photo can have multiple files inside (can have movie, etc. files inside)
+
+- Main Image Selection: Choose from one of the provided images or import your own from your computer
+
+- Optional Features:
+        1. Rows/Cols: Choose the number of rows and cols that the final photo mosaic will be made up of
+        2. Basic/Detailed: Choose the level of analysis of the images. 
+            The higher the number, the better image created! (but takes longer time)
+            Number indicates how many rows and cols each grid will be separated into for analysis
+\n\n\n
+\t\t\t               ***Press any key to return***
 '''
 
     def keyPressed(mode, event):
@@ -204,12 +215,15 @@ class ImportMainMode(Mode):
         mode.main3 = convertUrlToImage('https://1.bp.blogspot.com/-lMg-uRzjXXQ/VWUVykvi6jI/AAAAAAAAAUA/SyND9ucVWU8/s1600/High%2BResolution%2BSpace%2BWallpaper.jpg')
         mode.mainImages = [mode.main1, mode.main2, mode.main3]
         mode.createButtons()
+        mode.leverLevels = 6
+        mode.segment = (mode.levsX2-mode.levsX1)//(mode.leverLevels-1)
 
     def modeActivated(mode):
         mode.app.rowsInput = mode.app.colsInput = ''
         mode.app.rowsBar = mode.app.colsBar = False
         mode.app.rowCol = None
         mode.counter = 0
+        mode.currLevel = 3
 
     def createButtons(mode):
         importWidth = 150
@@ -243,9 +257,13 @@ class ImportMainMode(Mode):
             mode.rowY+mode.rowColHeight, color='light gray', title='rows')
         colsButton = Button(mode.rowColX, mode.colY, mode.rowColX+mode.rowColWidth, 
             mode.colY+mode.rowColHeight, color='light gray', title='cols')
+        mode.levsX1 = mode.width*0.07
+        mode.levsX2 = mode.width*0.33
+        mode.levsButton = Button(mode.levsX1, mode.height*0.88, mode.levsX2, 
+            mode.height*0.9, fill='white', title='lever')
 
         mode.buttons = [importButton, mode.nextButton, main1Button, main2Button, 
-            main3Button, rowsButton, colsButton]
+            main3Button, rowsButton, colsButton, mode.levsButton]
 
     def timerFired(mode):
         if (mode.app.mainImage):
@@ -321,8 +339,16 @@ class ImportMainMode(Mode):
                     mode.app.rowsBar = True
                 elif (button.title == 'cols'):
                     mode.app.colsBar = True
+                elif (button.title == 'lever'):
+                    mode.currLevel = round((event.x-button.x1)/mode.segment) + 1
                 elif (type(button.content) == type(mode.mainImages[0])):
                     mode.app.mainImage = button.content
+    
+    def drawLever(mode, canvas):
+        cx = (mode.currLevel-1)*mode.segment + mode.levsX1
+        cy = mode.levsButton.cy
+        r = mode.levsButton.ry + 1
+        canvas.create_oval(cx-r, cy-r, cx+r, cy+r, fill='white')
 
     def redrawAll(mode, canvas):
         cx = mode.width//2
@@ -343,9 +369,10 @@ class ImportMainMode(Mode):
         canvas.create_line(mode.width*0.07, mode.height*0.89, mode.width*0.33, mode.height*0.89,
             fill='white', width=3)
         canvas.create_text(mode.width*0.07, mode.height*0.92, font='Arial 12 bold',
-            fill='white', anchor='w', text = 'Basic\t\t Detailed')
+            fill='white', anchor='w', text=f'Basic (1)\t              Detailed ({mode.leverLevels})')
         for button in mode.buttons:    
-            mode.app.drawButton(mode, button, canvas)
+            if (button.title == 'lever'): mode.drawLever(canvas)
+            else: mode.app.drawButton(mode, button, canvas)
         mode.drawInput(canvas)
 
 
