@@ -223,7 +223,7 @@ class ImportMainMode(Mode):
         mode.app.rowsBar = mode.app.colsBar = False
         mode.app.rowCol = None
         mode.counter = 0
-        mode.currLevel = 3
+        mode.app.currLevel = 3
 
     def createButtons(mode):
         importWidth = 150
@@ -340,12 +340,12 @@ class ImportMainMode(Mode):
                 elif (button.title == 'cols'):
                     mode.app.colsBar = True
                 elif (button.title == 'lever'):
-                    mode.currLevel = round((event.x-button.x1)/mode.segment) + 1
+                    mode.app.currLevel = round((event.x-button.x1)/mode.segment) + 1
                 elif (type(button.content) == type(mode.mainImages[0])):
                     mode.app.mainImage = button.content
     
     def drawLever(mode, canvas):
-        cx = (mode.currLevel-1)*mode.segment + mode.levsX1
+        cx = (mode.app.currLevel-1)*mode.segment + mode.levsX1
         cy = mode.levsButton.cy
         r = mode.levsButton.ry + 1
         canvas.create_oval(cx-r, cy-r, cx+r, cy+r, fill='white')
@@ -389,7 +389,7 @@ class LoadingMode(Mode):
         #mode.gifCounter = (mode.gifCounter + 1) % len(mode.gifImages)
         if (mode.counter % 10 == 0):
             mode.app.mosaic = imageMosaicCreator(mode.app.mainImage, 
-                mode.app.sampleImages, keywordDirectory=mode.app.input, rowCol=mode.app.rowCol)
+                mode.app.sampleImages, keywordDirectory=mode.app.input, rowCol=mode.app.rowCol, analysisLevel=mode.app.currLevel)
             mode.frameWidth, mode.frameHeight = mode.width-80, mode.height-80
             mode.app.mosaicForDisplay = mode.app.frameImage(mode.app.mosaic, (mode.frameWidth, mode.frameHeight))
             mode.app.setActiveMode(mode.app.SaveMode)

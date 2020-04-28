@@ -12,17 +12,17 @@ import numpy as np
 import time
 
 ####################### Sample Images (Remove Later) ########################
-fileName = "Nagahama_Neru"
-imgPath = f"C:\\Users\\anjua\\OneDrive\\Pictures\\15112_TP\\{fileName}.jpg"
-image1 = Image.open(imgPath)
+#fileName = "Nagahama_Neru"
+#imgPath = f"C:\\Users\\anjua\\OneDrive\\Pictures\\15112_TP\\{fileName}.jpg"
+#image1 = Image.open(imgPath)
 
-fileName = "HKT"
-imgPath = f"C:\\Users\\anjua\\OneDrive\\Pictures\\15112_TP\\{fileName}.jpg"
-image2 = Image.open(imgPath)
+#fileName = "HKT"
+#imgPath = f"C:\\Users\\anjua\\OneDrive\\Pictures\\15112_TP\\{fileName}.jpg"
+#image2 = Image.open(imgPath)
 
-fileName = "Nature"
-imgPath = f"C:\\Users\\anjua\\OneDrive\\Pictures\\15112_TP\\{fileName}.jpg"
-image3 = Image.open(imgPath)
+#fileName = "Nature"
+#imgPath = f"C:\\Users\\anjua\\OneDrive\\Pictures\\15112_TP\\{fileName}.jpg"
+#image3 = Image.open(imgPath)
 #############################################################################
 
 ############################### MAIN FUNCTION ###############################
