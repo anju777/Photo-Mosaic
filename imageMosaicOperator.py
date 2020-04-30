@@ -38,7 +38,10 @@ def imageMosaicCreator(mainImage, sampleImages, keywordDirectory=None, rowCol=No
     if (keywordDirectory): 
         path = f'C:/Users/anjua/OneDrive/Desktop/Photo-Mosaic/SampleImages/{keywordDirectory}/rgbSamples{analysisRows}x{analysisCols}.csv'
     sampleImages = sizeSampleImages(sampleImages, mainImage, rows, cols)
-    if (path and os.path.exists(path)): sampleImagesRGB = retrieveSamples(path)
+    if (path and os.path.exists(path)): 
+        sampleImagesRGB = retrieveSamples(path)
+        if (len(sampleImages) != len(sampleImagesRGB)): 
+            sampleImagesRGB = getListOfRGBValuesAndSave(sampleImages, path=path, rows=analysisRows, cols=analysisCols)
     else: sampleImagesRGB = getListOfRGBValuesAndSave(sampleImages, path=path, rows=analysisRows, cols=analysisCols)
     griddedImages = gridImage(mainImage, rows, cols)
     avgRGBMain = tuple(getAverageRGB(mainImage).tolist())
@@ -48,6 +51,7 @@ def imageMosaicCreator(mainImage, sampleImages, keywordDirectory=None, rowCol=No
         for col in range(cols):
             avgRGB = getRGBGridded(griddedImages[row][col], rows=analysisRows, cols=analysisCols)
             indexOfSampleImage = findClosestRGB(avgRGB, sampleImagesRGB)
+            print(indexOfSampleImage, len(sampleImages))
             sampleImage = sampleImages[indexOfSampleImage]
             griddedImages[row][col] = sampleImage
         end = time.perf_counter()

@@ -121,7 +121,7 @@ def getHtmlOfGoogleImagePage(driver):
     return html
 
 # Run on selenium browser and scrolls page fully scrolled down n times
-def scrollDown(driver, startOffset=0, n=35, webSize=1080):
+def scrollDown(driver, startOffset=0, n=7, webSize=1080):
     for i in range(n):
         start = i*webSize + startOffset
         # Citation: modified code from below URL for driver.execute_script
