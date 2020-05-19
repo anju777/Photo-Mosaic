@@ -35,7 +35,7 @@ i_lock = threading.Lock()
 imageList_lock = threading.Lock()
 ###############################################################################
 
-########################## modifyKeywordForDirectory #########################
+########################### modifyKeywordForDirectory #########################
 def modifyKeywordForDirectory(keyword):
     illegalPunctuation = {'\\', '/', ':', '*', '?', '"', '<', '>', '|'}
     i = 0
