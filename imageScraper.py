@@ -48,7 +48,7 @@ def modifyKeywordForDirectory(keyword):
     return keyword
 ##############################################################################
 
-######################## retrieveHtmlsFromGoogleImage ########################
+####################### retrieveHtmlsFromGoogleImage #########################
 # Use Selenium to search Google Image for keyword, and returns HTML of that page
 def retrieveHtmlsFromGoogleImage(keyword, n=''):
     threads = []
